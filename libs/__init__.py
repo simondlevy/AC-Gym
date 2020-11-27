@@ -14,11 +14,12 @@ def make_nets(args, env, device):
 
 def make_learn_parser():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--env', default='Pendulum-v0', help='Environment id')
+    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
+    parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
     parser.add_argument('--cuda', default=False, action='store_true', help='Enable CUDA')
     parser.add_argument('--name', required=True, help='Name of the run')
     parser.add_argument('--datafile', required=False, help='Name of data file to load')
-    parser.add_argument('--env', default='Pendulum-v0', help='Environment id')
-    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--maxeps', default=None, type=int, help='Maximum number of episodes')
     parser.add_argument('--maxhrs', default=None, type=float, help='Maximum run-time in hours')
     parser.add_argument('--test-iters', default=100000, type=float, help='How often to test and save best')
