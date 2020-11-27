@@ -4,7 +4,7 @@ import torch
 import gym
 import argparse
 
-import TD3
+from td3 import TD3
 from evaluate import eval_policy
 
 def main():
@@ -35,7 +35,7 @@ def main():
 
     # Target policy smoothing is scaled wrt the action scale
     kwargs['nhid'] = args.nhid
-    policy = TD3.TD3(**kwargs)
+    policy = TD3(**kwargs)
 
     policy.load(args.filename)
 

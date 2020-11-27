@@ -7,7 +7,7 @@ import os
 
 from evaluate import eval_policy
 from replay import ReplayBuffer
-import TD3
+from td3 import TD3
 
 def eval_policy_learn(policy, env_name, seed, eval_episodes=10):
     avg_reward = eval_policy(policy, env_name, seed, eval_episodes)
@@ -71,7 +71,7 @@ def main():
     kwargs['noise_clip'] = args.noise_clip * max_action
     kwargs['policy_freq'] = args.policy_freq
     kwargs['nhid'] = args.nhid
-    policy = TD3.TD3(**kwargs)
+    policy = TD3(**kwargs)
 
     if args.load_model != '':
         policy_file = file_name if args.load_model == 'default' else args.load_model
