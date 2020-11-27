@@ -17,7 +17,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
     parser.add_argument("-e", "--env", default=ENV_ID, help="Environment name to use, default=" + ENV_ID)
-    parser.add_argument("-d", "--datafile", required=False, help="Name of data file to load")
     parser.add_argument("--hid", default=NHID, type=int, help="Hidden units, default=" + str(NHID))
     parser.add_argument("-r", "--record", help="If specified, sets the recording dir, default=Disabled")
     parser.add_argument("-s", "--save", type=int, help="If specified, save every N-th step as an image")
