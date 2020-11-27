@@ -2,16 +2,16 @@
 import numpy as np
 import torch
 import gym
+from gym import wrappers
 import argparse
 
-from td3 import TD3
-from evaluate import eval_policy
+from td3 import TD3, eval_policy
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
     parser.add_argument('--env', default='Pendulum-v0', help='OpenAI gym environment name')
-    parser.add_argument('--nhid', default='64',type=int,  help='Number of hidden units')
+    parser.add_argument('--nhid', default='256',type=int,  help='Number of hidden units')
     parser.add_argument('--record', help='If specified, sets the recording dir')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
@@ -43,7 +43,7 @@ def main():
 
     policy.load(args.filename)
 
-    print(eval_policy(policy, args.env, seed=None, render=True, eval_episodes=1))
+    print(eval_policy(policy, args.env, seed=None, render=(args.record is None), eval_episodes=1))
 
 if __name__ == '__main__':
     main()

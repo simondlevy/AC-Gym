@@ -5,9 +5,8 @@ import gym
 import argparse
 import os
 
-from evaluate import eval_policy
 from replay import ReplayBuffer
-from td3 import TD3
+from td3 import TD3, eval_policy
 
 def eval_policy_learn(policy, env_name, seed, eval_episodes=10):
     avg_reward = eval_policy(policy, env_name, seed, eval_episodes)

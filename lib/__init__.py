@@ -1,3 +1,4 @@
+import gym
 import ptan
 import numpy as np
 import torch
@@ -33,7 +34,7 @@ def parse_args(parser, algo):
     device = torch.device("cuda" if args.cuda else "cpu")
     save_path = os.path.join("saves", algo + "-" + args.name)
     os.makedirs(save_path, exist_ok=True)
-    test_env = make_env(args)
+    test_env = gym.make(args.env)
     maxeps = np.inf if args.maxeps is None else args.maxeps
     maxsec = np.inf if args.maxhrs is None else (args.maxhrs * 3600)
     return args, device, save_path, test_env, maxeps, maxsec

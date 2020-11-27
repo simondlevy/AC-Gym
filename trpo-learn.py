@@ -4,7 +4,7 @@ import ptan
 import time
 from tensorboardX import SummaryWriter
 
-from lib import model, trpo, test_net, calc_logprob, make_learn_parser, parse_args, make_env, make_nets
+from lib import model, trpo, test_net, calc_logprob, make_learn_parser, parse_args, make_nets
 
 import numpy as np
 import torch
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, "trpo")
 
-    env = make_env(args)
+    env = gym.make(args.env)
 
     net_act, net_crt = make_nets(args, env, device)
 

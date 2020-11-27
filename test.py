@@ -21,11 +21,11 @@ def main():
 
     env = gym.make(args.env)
 
-    # Set seeds if indicated
     if args.seed is not None:
         env.seed(args.seed)
         torch.manual_seed(args.seed)
         np.random.seed(args.seed)
+
     if args.record:
         env = wrappers.Monitor(env, args.record)
 
