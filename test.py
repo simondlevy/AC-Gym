@@ -70,7 +70,7 @@ def main():
     if args.record:
         env = wrappers.Monitor(env, args.record)
 
-    steps, reward = run_td3(env, args) if 'td3' in args.filename else run_other(env, args)
+    reward, steps = run_td3(env, args) if 'td3' in args.filename else run_other(env, args)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
     env.close()
