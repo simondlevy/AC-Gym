@@ -6,9 +6,6 @@ import math
 import argparse
 import os
 
-def make_env(args):
-
-    return gym.make(args.env) if args.datafile is None else gym.make(args.env, datafile=args.datafile)
 
 def make_nets(args, env, device):
     net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.hid).to(device)

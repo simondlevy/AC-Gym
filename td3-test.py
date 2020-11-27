@@ -10,14 +10,14 @@ from evaluate import eval_policy
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
-    parser.add_argument('--env', default='LunarLanderContinuous-v2',help='OpenAI gym environment name')
-    parser.add_argument('--nhid', default='256',type=int,           help='Number of hidden units')
+    parser.add_argument('--env', default='Pendulum-v0',help='OpenAI gym environment name')
+    parser.add_argument('--nhid', default='64',type=int,           help='Number of hidden units')
     parser.add_argument('--seed', default=None, type=int,           help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
     env = gym.make(args.env)
 
-    # Set seeds
+    # Set seeds if indicated
     if args.seed is not None:
         env.seed(args.seed)
         torch.manual_seed(args.seed)

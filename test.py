@@ -2,31 +2,35 @@
 import argparse
 from gym import wrappers
 
-from lib import model, kfac, make_env
+from lib import model, kfac
 from PIL import Image
 import os
 
 import numpy as np
 import torch
+import gym
 
-
-ENV_ID = "Pendulum-v0"
-NHID = 64
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
-    parser.add_argument("-e", "--env", default=ENV_ID, help="Environment name to use, default=" + ENV_ID)
-    parser.add_argument("--hid", default=NHID, type=int, help="Hidden units, default=" + str(NHID))
-    parser.add_argument("-r", "--record", help="If specified, sets the recording dir, default=Disabled")
-    parser.add_argument("-s", "--save", type=int, help="If specified, save every N-th step as an image")
+    parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
+    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
+    parser.add_argument('--record', help='If specified, sets the recording dir, default=Disabled')
+    parser.add_argument('--save', type=int, help='If specified, save every N-th step as an image')
+    parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
-    env = make_env(args)
+    env = gym.make(args.env)
+
+    # Set seeds if indicated
+    if args.seed is not None:
+        env.seed(args.seed)
+        torch.manual_seed(args.seed)
+        np.random.seed(args.seed)
     if args.record:
         env = wrappers.Monitor(env, args.record)
 
-    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.hid)
+    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
     net.load_state_dict(torch.load(args.filename))
 
     obs = env.reset()
@@ -49,6 +53,9 @@ if __name__ == "__main__":
             img = Image.fromarray(o)
             if not os.path.exists('images'):
                 os.mkdir('images')
-            img.save("images/img_%05d.png" % total_steps)
-    print("In %d steps we got %.3f reward" % (total_steps, total_reward))
+            img.save('images/img_%05d.png' % total_steps)
+    print('In %d steps we got %.3f reward' % (total_steps, total_reward))
     env.close()
+
+if __name__ == '__main__':
+    main()
