@@ -1,2 +1,2 @@
 clean:
-	rm -rf __pycache__/ *models/ *runs/
+	rm -rf __pycache__/ *models/ *runs/ tmp/
