@@ -28,9 +28,11 @@ def run_td3(env, args):
 def run_other(env, args):
 
     net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
+    
     net.load_state_dict(torch.load(args.filename))
 
     obs = env.reset()
+
     total_reward = 0.0
     total_steps = 0
     while True:

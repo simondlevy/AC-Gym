@@ -4,8 +4,9 @@ import math
 import time
 from tensorboardX import SummaryWriter
 
-from libs import ptan, model, common, kfac, test_net, calc_logprob, make_learn_parser, parse_args, make_env
+from libs import ptan, model, common, kfac, test_net, calc_logprob, make_learn_parser, parse_args
 
+import gym
 import numpy as np
 import torch
 import torch.optim as optim
@@ -20,20 +21,18 @@ LEARNING_RATE_CRITIC = 1e-3
 ENTROPY_BETA = 1e-3
 ENVS_COUNT = 16
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     parser = make_learn_parser()
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, "acktr")
+    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'acktr')
 
-    envs = [make_env(args.env) for _ in range(ENVS_COUNT)]
+    envs = [gym.make(args.env) for _ in range(ENVS_COUNT)]
 
     net_act = model.ModelActor(envs[0].observation_space.shape[0], envs[0].action_space.shape[0], args.nhid).to(device)
     net_crt = model.ModelCritic(envs[0].observation_space.shape[0], args.nhid).to(device)
-    print(net_act)
-    print(net_crt)
 
-    writer = SummaryWriter(comment="-acktr_" + args.name)
+    writer = SummaryWriter(comment='-acktr_' + args.env)
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, GAMMA, steps_count=REWARD_STEPS)
 
@@ -54,7 +53,7 @@ if __name__ == "__main__":
                 rewards_steps = exp_source.pop_rewards_steps()
                 if rewards_steps:
                     rewards, steps = zip(*rewards_steps)
-                    tb_tracker.track("episode_steps", np.mean(steps), step_idx)
+                    tb_tracker.track('episode_steps', np.mean(steps), step_idx)
                     tracker.reward(np.mean(rewards), step_idx)
 
                 tcurr = time.time()
@@ -63,18 +62,22 @@ if __name__ == "__main__":
                     break
  
                 if step_idx % args.test_iters == 0:
-                    rewards, steps = test_net(net_act, test_env, device=device)
-                    print("Test done in %.2f sec, reward %.3f, steps %d" % (
-                        time.time() - tcurr, rewards, steps))
-                    writer.add_scalar("test_reward", rewards, step_idx)
-                    writer.add_scalar("test_steps", steps, step_idx)
-                    if best_reward is None or best_reward < rewards:
+                    reward, steps = test_net(net_act, test_env, device=device)
+                    print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
+                    writer.add_scalar('test_reward', reward, step_idx)
+                    writer.add_scalar('test_steps', steps, step_idx)
+                    name = '%+.3f_%d.dat' % (reward, step_idx)
+                    fname = save_path + name
+                    if best_reward is None or best_reward < reward:
                         if best_reward is not None:
-                            print("Best reward updated: %.3f -> %.3f" % (best_reward, rewards))
-                            name = "best_%+.3f_%d.dat" % (rewards, step_idx)
-                            fname = os.path.join(save_path, name)
+                            print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
                             torch.save(net_act.state_dict(), fname)
-                        best_reward = rewards
+                        best_reward = reward
+                    if args.target is not None and reward >= args.target:
+                        print('Target %f achieved; saving %s' % (args.target,fname))
+                        torch.save(net_act.state_dict(), fname)
+                        break
+
 
                 batch.append(exp)
                 if len(batch) < BATCH_SIZE:
@@ -107,10 +110,10 @@ if __name__ == "__main__":
                 loss_v.backward()
                 opt_act.step()
 
-                tb_tracker.track("advantage", adv_v, step_idx)
-                tb_tracker.track("values", value_v, step_idx)
-                tb_tracker.track("batch_rewards", vals_ref_v, step_idx)
-                tb_tracker.track("loss_entropy", entropy_loss_v, step_idx)
-                tb_tracker.track("loss_policy", loss_policy_v, step_idx)
-                tb_tracker.track("loss_value", loss_value_v, step_idx)
-                tb_tracker.track("loss_total", loss_v, step_idx)
+                tb_tracker.track('advantage', adv_v, step_idx)
+                tb_tracker.track('values', value_v, step_idx)
+                tb_tracker.track('batch_rewards', vals_ref_v, step_idx)
+                tb_tracker.track('loss_entropy', entropy_loss_v, step_idx)
+                tb_tracker.track('loss_policy', loss_policy_v, step_idx)
+                tb_tracker.track('loss_value', loss_value_v, step_idx)
+                tb_tracker.track('loss_total', loss_v, step_idx)
