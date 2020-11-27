@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     net_act, net_crt = make_nets(args, envs[0], device)
 
-    writer = SummaryWriter(comment="-a2c_" + args.name)
+    writer = SummaryWriter(comment="-a2c_" + args.env)
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, GAMMA, steps_count=REWARD_STEPS)
 
@@ -42,7 +42,9 @@ if __name__ == "__main__":
     tstart = time.time()
 
     with ptan.common.utils.RewardTracker(writer) as tracker:
+
         with ptan.common.utils.TBMeanTracker(writer, batch_size=100) as tb_tracker:
+
             for step_idx, exp in enumerate(exp_source):
 
                 if len(tracker.total_rewards) >= maxeps:
@@ -61,18 +63,22 @@ if __name__ == "__main__":
                     tracker.reward(np.mean(rewards), step_idx)
 
                 if step_idx % args.test_iters == 0:
-                    rewards, steps = test_net(net_act, test_env, device=device)
-                    print("Test done in %.2f sec, reward %.3f, steps %d" % (
-                        time.time() - tcurr, rewards, steps))
-                    writer.add_scalar("test_reward", rewards, step_idx)
+                    reward, steps = test_net(net_act, test_env, device=device)
+                    print("Test done in %.2f sec, reward %.3f, steps %d" % (time.time() - tcurr, reward, steps))
+                    writer.add_scalar("test_reward", reward, step_idx)
                     writer.add_scalar("test_steps", steps, step_idx)
-                    if best_reward is None or best_reward < rewards:
+                    name = '%+.3f_%d.dat' % (reward, step_idx)
+                    fname = save_path + name
+                    if best_reward is None or best_reward < reward:
                         if best_reward is not None:
-                            print("Best reward updated: %.3f -> %.3f" % (best_reward, rewards))
-                            name = "best_%+.3f_%d.dat" % (rewards, step_idx)
-                            fname = os.path.join(save_path, name)
+                            print("Best reward updated: %.3f -> %.3f" % (best_reward, reward))
                             torch.save(net_act.state_dict(), fname)
-                        best_reward = rewards
+                        best_reward = reward
+                    if args.target is not None and reward >= args.target:
+                        print('Target %f achieved; saving %s' % (args.target,fname))
+                        torch.save(net_act.state_dict(), fname)
+                        break
+
 
                 batch.append(exp)
                 if len(batch) < BATCH_SIZE:
