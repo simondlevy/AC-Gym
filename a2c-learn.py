@@ -3,6 +3,7 @@ import os
 import math
 import ptan
 import time
+import gym
 from tensorboardX import SummaryWriter
 
 from lib import model, common, test_net, calc_logprob, make_learn_parser, parse_args, make_nets

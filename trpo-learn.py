@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import ptan
+import gym
 import time
 from tensorboardX import SummaryWriter
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import time
+
 from gym import wrappers
 
 from lib import model
-from PIL import Image
-import os
-import time
 
 import numpy as np
 import torch
