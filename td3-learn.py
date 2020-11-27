@@ -41,11 +41,11 @@ def main():
     print('Env: %s, Seed: %d' % (args.env, args.seed))
     print('---------------------------------------')
 
-    if not os.path.exists('./results'):
-        os.makedirs('./results')
+    if not os.path.exists('./td3-results'):
+        os.makedirs('./td3-results')
 
-    if not os.path.exists('./models'):
-        os.makedirs('./models')
+    if not os.path.exists('./td3-models'):
+        os.makedirs('./td3-models')
 
     env = gym.make(args.env)
 
@@ -128,8 +128,8 @@ def main():
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, args.env, args.seed)
             evaluations.append(avg_reward)
-            np.save('./results/%s'%file_name, evaluations)
-            policy.save('./models/%s'% file_name)
+            np.save('./td3-results/%s'%file_name, evaluations)
+            policy.save('./td3-models/%s'% file_name)
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
