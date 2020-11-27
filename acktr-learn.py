@@ -29,8 +29,8 @@ if __name__ == "__main__":
 
     envs = [make_env(args.env) for _ in range(ENVS_COUNT)]
 
-    net_act = model.ModelActor(envs[0].observation_space.shape[0], envs[0].action_space.shape[0], args.hid).to(device)
-    net_crt = model.ModelCritic(envs[0].observation_space.shape[0], args.hid).to(device)
+    net_act = model.ModelActor(envs[0].observation_space.shape[0], envs[0].action_space.shape[0], args.nhid).to(device)
+    net_crt = model.ModelCritic(envs[0].observation_space.shape[0], args.nhid).to(device)
     print(net_act)
     print(net_crt)
 

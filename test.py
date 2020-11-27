@@ -10,24 +10,7 @@ import numpy as np
 import torch
 import gym
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('filename', metavar='FILENAME', help='input file')
-    parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
-    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
-    parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
-    parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
-    args = parser.parse_args()
-
-    env = gym.make(args.env)
-
-    if args.seed is not None:
-        env.seed(args.seed)
-        torch.manual_seed(args.seed)
-        np.random.seed(args.seed)
-
-    if args.record:
-        env = wrappers.Monitor(env, args.record)
+def run_other(env, args):
 
     net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
     net.load_state_dict(torch.load(args.filename))
@@ -50,7 +33,32 @@ def main():
         total_steps += 1
         if done:
             break
-    print('In %d steps we got %.3f reward' % (total_steps, total_reward))
+
+    return total_steps, total_reward
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('filename', metavar='FILENAME', help='input file')
+    parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
+    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
+    parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
+    parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
+    args = parser.parse_args()
+
+    env = gym.make(args.env)
+
+    if args.seed is not None:
+        env.seed(args.seed)
+        torch.manual_seed(args.seed)
+        np.random.seed(args.seed)
+
+    if args.record:
+        env = wrappers.Monitor(env, args.record)
+
+    steps, reward = run_other(env, args)
+
+    print('In %d steps we got %.3f reward' % (steps, reward))
     env.close()
 
 if __name__ == '__main__':
