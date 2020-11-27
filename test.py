@@ -51,7 +51,7 @@ def run_other(env, args):
         if done:
             break
 
-    return total_steps, total_reward
+    return total_reward, total_steps
 
 
 def main():
