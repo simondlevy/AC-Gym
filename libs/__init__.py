@@ -27,8 +27,8 @@ def make_learn_parser():
 def parse_args(parser, algo):
     args = parser.parse_args()
     device = torch.device('cuda' if args.cuda else 'cpu')
-    save_path = os.path.join('models', algo + '-' + args.env)
-    os.makedirs(save_path, exist_ok=True)
+    os.makedirs('./models/', exist_ok=True)
+    save_path = './models/' + algo + '-' + args.env
     test_env = gym.make(args.env)
     maxeps = np.inf if args.maxeps is None else args.maxeps
     maxsec = np.inf if args.maxhrs is None else (args.maxhrs * 3600)

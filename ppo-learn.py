@@ -103,7 +103,7 @@ if __name__ == '__main__':
                 writer.add_scalar('test_reward', reward, step_idx)
                 writer.add_scalar('test_steps', steps, step_idx)
                 name = '%+.3f_%d.dat' % (reward, step_idx)
-                fname = os.path.join(save_path, name)
+                fname = save_path + name
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
                         print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
