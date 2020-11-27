@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import os
 import math
-from lib import ptan
 import time
 from tensorboardX import SummaryWriter
 
-from lib import model, common, kfac, test_net, calc_logprob, make_learn_parser, parse_args, make_env
+from libs import ptan, model, common, kfac, test_net, calc_logprob, make_learn_parser, parse_args, make_env
 
 import numpy as np
 import torch

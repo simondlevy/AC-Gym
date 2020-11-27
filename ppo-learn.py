@@ -4,7 +4,7 @@ import os
 import time
 from tensorboardX import SummaryWriter
 
-from lib import ptan, model, test_net, calc_logprob, make_learn_parser, parse_args, make_nets
+from libs import ptan, model, test_net, calc_logprob, make_learn_parser, parse_args, make_nets
 
 import numpy as np
 import torch

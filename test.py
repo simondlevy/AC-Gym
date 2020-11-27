@@ -5,8 +5,8 @@ import time
 import gym
 from gym import wrappers
 
-from lib import model
-from lib.td3 import TD3, eval_policy
+from libs import model
+from libs.td3 import TD3, eval_policy
 
 import numpy as np
 import torch
