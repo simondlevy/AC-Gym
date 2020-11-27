@@ -11,16 +11,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-GAE_LAMBDA = 0.95
-
-TRAJECTORY_SIZE = 2049
-LEARNING_RATE_ACTOR = 1e-5
-LEARNING_RATE_CRITIC = 1e-4
-
-PPO_EPS = 0.2
-PPO_EPOCHS = 10
-PPO_BATCH_SIZE = 64
-
 def calc_adv_ref(trajectory, net_crt, states_v, device='cpu'):
     '''
     By trajectory calculate advantage and 1-step ref value
@@ -43,7 +33,7 @@ def calc_adv_ref(trajectory, net_crt, states_v, device='cpu'):
             last_gae = delta
         else:
             delta = exp.reward + args.gamma * next_val - val
-            last_gae = delta + args.gamma * GAE_LAMBDA * last_gae
+            last_gae = delta + args.gamma * args.gae_lambda * last_gae
         result_adv.append(last_gae)
         result_ref.append(last_gae + val)
 
@@ -56,8 +46,13 @@ if __name__ == '__main__':
 
     parser = make_learn_parser()
 
-    parser.add_argument('--lrc', default=LEARNING_RATE_CRITIC, type=float, help='Critic learning rate')
-    parser.add_argument('--lra', default=LEARNING_RATE_ACTOR, type=float, help='Actor learning rate')
+    parser.add_argument('--gae-lambda', default=0.95, type=float, help='Lambda for Generalized Advantage Estimation')
+    parser.add_argument('--traj-size', default=2049, type=int, help='Trajectory size')
+    parser.add_argument('--lr-actor', default=1e-5, type=float, help='Learning rate for actor')
+    parser.add_argument('--lr-critic', default=1e-4, type=float, help='Learning rate for critic')
+    parser.add_argument('--epsilon', default=0.2, type=float, help='Clipping')
+    parser.add_argument('--epochs', default=10, type=int, help='Epochs')
+    parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
 
     args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'ppo')
 
@@ -69,8 +64,8 @@ if __name__ == '__main__':
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
-    opt_act = optim.Adam(net_act.parameters(), lr=args.lra)
-    opt_crt = optim.Adam(net_crt.parameters(), lr=args.lrc)
+    opt_act = optim.Adam(net_act.parameters(), lr=args.lr_actor)
+    opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
 
     trajectory = []
     best_reward = None
@@ -113,7 +108,7 @@ if __name__ == '__main__':
                     break
 
             trajectory.append(exp)
-            if len(trajectory) < TRAJECTORY_SIZE:
+            if len(trajectory) < args.traj_size:
                 continue
 
             traj_states = [t[0].state for t in trajectory]
@@ -138,11 +133,11 @@ if __name__ == '__main__':
             sum_loss_policy = 0.0
             count_steps = 0
 
-            for epoch in range(PPO_EPOCHS):
+            for epoch in range(args.epochs):
 
-                for batch_ofs in range(0, len(trajectory), PPO_BATCH_SIZE):
+                for batch_ofs in range(0, len(trajectory), args.batch_size):
 
-                    batch_l = batch_ofs + PPO_BATCH_SIZE
+                    batch_l = batch_ofs + args.batch_size
                     states_v = traj_states_v[batch_ofs:batch_l]
                     actions_v = traj_actions_v[batch_ofs:batch_l]
                     batch_adv_v = traj_adv_v[batch_ofs:batch_l]
@@ -167,7 +162,7 @@ if __name__ == '__main__':
                     ratio_v = torch.exp(
                         logprob_pi_v - batch_old_logprob_v)
                     surr_obj_v = batch_adv_v * ratio_v
-                    c_ratio_v = torch.clamp(ratio_v, 1.0 - PPO_EPS, 1.0 + PPO_EPS)
+                    c_ratio_v = torch.clamp(ratio_v, 1.0 - args.epsilon, 1.0 + args.epsilon)
                     clipped_surr_v = batch_adv_v * c_ratio_v
                     loss_policy_v = -torch.min(
                         surr_obj_v, clipped_surr_v).mean()
