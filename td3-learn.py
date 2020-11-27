@@ -38,11 +38,8 @@ def main():
     print('Env: %s, Seed: %d' % (args.env, args.seed))
     print('---------------------------------------')
 
-    if not os.path.exists('./runs'):
-        os.makedirs('./runs')
-
-    if not os.path.exists('./models'):
-        os.makedirs('./models')
+    os.makedirs('./runs', exist_ok=True)
+    os.makedirs('./models', exist_ok=True)
 
     env = gym.make(args.env)
 
