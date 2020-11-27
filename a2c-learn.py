@@ -12,7 +12,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-GAMMA = 0.99
 REWARD_STEPS = 5
 BATCH_SIZE = 32
 LEARNING_RATE_ACTOR = 1e-5
@@ -32,7 +31,7 @@ if __name__ == "__main__":
 
     writer = SummaryWriter(comment="-a2c_" + args.env)
     agent = model.AgentA2C(net_act, device=device)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, GAMMA, steps_count=REWARD_STEPS)
+    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=REWARD_STEPS)
 
     opt_act = optim.Adam(net_act.parameters(), lr=LEARNING_RATE_ACTOR)
     opt_crt = optim.Adam(net_crt.parameters(), lr=LEARNING_RATE_CRITIC)
@@ -85,7 +84,7 @@ if __name__ == "__main__":
                     continue
 
                 states_v, actions_v, vals_ref_v = \
-                    common.unpack_batch_a2c(batch, net_crt, last_val_gamma=GAMMA ** REWARD_STEPS, device=device)
+                    common.unpack_batch_a2c(batch, net_crt, last_val_gamma=args.gamma ** REWARD_STEPS, device=device)
                 batch.clear()
 
                 opt_crt.zero_grad()

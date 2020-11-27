@@ -13,13 +13,19 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-GAMMA = 0.99
 REWARD_STEPS = 5
 BATCH_SIZE = 32
 LEARNING_RATE_ACTOR = 1e-3
 LEARNING_RATE_CRITIC = 1e-3
 ENTROPY_BETA = 1e-3
 ENVS_COUNT = 16
+
+def clean_act_net(d):
+    # Correct for different key names in ACKTR
+    newd = {}
+    for key in d.keys():
+        newd[key.replace('.module','').replace('add_bias._', '')] = d[key]
+    return newd
 
 if __name__ == '__main__':
 
@@ -34,7 +40,7 @@ if __name__ == '__main__':
 
     writer = SummaryWriter(comment='-acktr_' + args.env)
     agent = model.AgentA2C(net_act, device=device)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, GAMMA, steps_count=REWARD_STEPS)
+    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=REWARD_STEPS)
 
     opt_act = kfac.KFACOptimizer(net_act, lr=LEARNING_RATE_ACTOR)
     opt_crt = optim.Adam(net_crt.parameters(), lr=LEARNING_RATE_CRITIC)
@@ -44,13 +50,16 @@ if __name__ == '__main__':
     tstart = time.time()
 
     with ptan.common.utils.RewardTracker(writer) as tracker:
+
         with ptan.common.utils.TBMeanTracker(writer, batch_size=100) as tb_tracker:
+
             for step_idx, exp in enumerate(exp_source):
 
                 if len(tracker.total_rewards) >= maxeps:
                     break
 
                 rewards_steps = exp_source.pop_rewards_steps()
+
                 if rewards_steps:
                     rewards, steps = zip(*rewards_steps)
                     tb_tracker.track('episode_steps', np.mean(steps), step_idx)
@@ -78,13 +87,12 @@ if __name__ == '__main__':
                         torch.save(net_act.state_dict(), fname)
                         break
 
-
                 batch.append(exp)
                 if len(batch) < BATCH_SIZE:
                     continue
 
                 states_v, actions_v, vals_ref_v = \
-                    common.unpack_batch_a2c(batch, net_crt, last_val_gamma=GAMMA ** REWARD_STEPS, device=device)
+                    common.unpack_batch_a2c(batch, net_crt, last_val_gamma=args.gamma ** REWARD_STEPS, device=device)
                 batch.clear()
 
                 opt_crt.zero_grad()

@@ -10,7 +10,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-GAMMA = 0.99
 BATCH_SIZE = 64
 LR_ACTS = 1e-4
 LR_VALS = 1e-4
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     writer = SummaryWriter(comment='-sac_' + args.env)
     agent = model.AgentDDPG(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(
-        env, agent, gamma=GAMMA, steps_count=1)
+        env, agent, gamma=args.gamma, steps_count=1)
     buffer = ptan.experience.ExperienceReplayBuffer(
         exp_source, buffer_size=REPLAY_SIZE)
     act_opt = optim.Adam(net_act.parameters(), lr=LR_ACTS)
@@ -70,7 +69,7 @@ if __name__ == '__main__':
                 states_v, actions_v, ref_vals_v, ref_q_v = \
                     common.unpack_batch_sac(
                         batch, tgt_net_crt.target_model,
-                        twinq_net, net_act, GAMMA,
+                        twinq_net, net_act, args.gamma,
                         SAC_ENTROPY_ALPHA, device)
 
                 tb_tracker.track('ref_v', ref_vals_v.mean(), step_idx)

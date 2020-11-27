@@ -11,7 +11,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-GAMMA = 0.99
 GAE_LAMBDA = 0.95
 
 TRAJECTORY_SIZE = 2049
@@ -39,8 +38,8 @@ def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
             delta = exp.reward - val
             last_gae = delta
         else:
-            delta = exp.reward + GAMMA * next_val - val
-            last_gae = delta + GAMMA * GAE_LAMBDA * last_gae
+            delta = exp.reward + args.gamma * next_val - val
+            last_gae = delta + args.gamma * GAE_LAMBDA * last_gae
         result_adv.append(last_gae)
         result_ref.append(last_gae + val)
 

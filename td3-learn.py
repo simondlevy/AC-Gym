@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--max_timesteps', default=1e6, type=int,   help='Max time steps to run environment')
     parser.add_argument('--expl_noise', default=0.1,                help='Std of Gaussian exploration noise')
     parser.add_argument('--batch_size', default=256, type=int,      help='Batch size for both actor and critic')
-    parser.add_argument('--discount', default=0.99,                 help='Discount factor')
+    parser.add_argument('--gamme', default=0.99,                    help='Discount factor')
     parser.add_argument('--tau', default=0.005,                     help='Target network update rate')
     parser.add_argument('--policy_noise', default=0.2,              help='Noise added to target policy during critic update')
     parser.add_argument('--noise_clip', default=0.5,                help='Range to clip target policy noise')
@@ -57,7 +57,7 @@ def main():
         action_dim,
 		max_action,
         args.nhid,
-		discount=args.discount,
+		discount=args.gamma,
 		tau=args.tau,
 		policy_noise=args.policy_noise * max_action,
 		noise_clip=args.noise_clip * max_action,
