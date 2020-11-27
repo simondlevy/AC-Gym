@@ -14,4 +14,11 @@ command-line interface and minimal external dependencies.
 
 ```python3 td3-learn.py --target -500```
 
-```python3 test.py models/td3-Pendulum-v0-447.668781.dat```
+This will run the TD3 algorithm on the default environment ([Pendulum-v0](https://gym.openai.com/envs/Pendulum-v0/))
+until an average reward of  -500 is reached (which takes about 23 seconds on my
+Asus Predator Helios laptop).  Once the program completes, you can display the
+results by running
+
+```python3 test.py models/td3-Pendulum-v0-<REWARD>.dat```
+
+where ```<REWARD>``` is the reward value.
