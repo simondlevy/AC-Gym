@@ -34,7 +34,6 @@ def main():
     parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     args = parser.parse_args()
 
-    file_name = args.env + '_' + str(args.seed) 
     print('---------------------------------------')
     print('Env: %s, Seed: %d' % (args.env, args.seed))
     print('---------------------------------------')
@@ -66,6 +65,8 @@ def main():
 		policy_noise=args.policy_noise * max_action,
 		noise_clip=args.noise_clip * max_action,
 		policy_freq=args.policy_freq)
+
+    file_name = args.env + '_' + str(args.seed) 
 	
     if args.load_model != '':
         policy_file = file_name if args.load_model == 'default' else args.load_model
