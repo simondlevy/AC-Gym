@@ -11,12 +11,15 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-def clean_act_net(d):
+def clean_act_net(old):
     # Correct for different key names in ACKTR
-    newd = {}
-    for key in d.keys():
-        newd[key.replace('.module','').replace('add_bias._', '')] = d[key]
-    return newd
+    new = {}
+    for oldkey in old.keys():
+        newkey = oldkey.replace('.module','').replace('add_bias._', '')
+        new[newkey] = old[oldkey]
+        if 'bias' in newkey:
+            new[newkey] = new[newkey].flatten()
+    return new
 
 if __name__ == '__main__':
 
@@ -78,11 +81,11 @@ if __name__ == '__main__':
                     if best_reward is None or best_reward < reward:
                         if best_reward is not None:
                             print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                            torch.save(net_act.state_dict(), fname)
+                            torch.save(clean_act_net(net_act.state_dict()), fname)
                         best_reward = reward
                     if args.target is not None and reward >= args.target:
                         print('Target %f achieved; saving %s' % (args.target,fname))
-                        torch.save(net_act.state_dict(), fname)
+                        torch.save(clean_act_net(net_act.state_dict()), fname)
                         break
 
                 batch.append(exp)
