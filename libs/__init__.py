@@ -18,7 +18,6 @@ def make_learn_parser():
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
     parser.add_argument('--cuda', default=False, action='store_true', help='Enable CUDA')
-    parser.add_argument('--name', required=True, help='Name of the run')
     parser.add_argument('--datafile', required=False, help='Name of data file to load')
     parser.add_argument('--maxeps', default=None, type=int, help='Maximum number of episodes')
     parser.add_argument('--maxhrs', default=None, type=float, help='Maximum run-time in hours')
@@ -28,7 +27,7 @@ def make_learn_parser():
 def parse_args(parser, algo):
     args = parser.parse_args()
     device = torch.device('cuda' if args.cuda else 'cpu')
-    save_path = os.path.join('models', algo + '-' + args.name)
+    save_path = os.path.join('models', algo + '-' + args.env)
     os.makedirs(save_path, exist_ok=True)
     test_env = gym.make(args.env)
     maxeps = np.inf if args.maxeps is None else args.maxeps

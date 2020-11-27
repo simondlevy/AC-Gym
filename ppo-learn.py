@@ -23,14 +23,14 @@ PPO_EPS = 0.2
 PPO_EPOCHS = 10
 PPO_BATCH_SIZE = 64
 
-def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
-    """
+def calc_adv_ref(trajectory, net_crt, states_v, device='cpu'):
+    '''
     By trajectory calculate advantage and 1-step ref value
     :param trajectory: trajectory list
     :param net_crt: critic network
     :param states_v: states tensor
     :return: tuple with advantage numpy array and reference values
-    """
+    '''
     values_v = net_crt(states_v)
     values = values_v.squeeze().data.cpu().numpy()
     # generalized advantage estimator: smoothed version of the advantage
@@ -54,20 +54,20 @@ def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
     return adv_v.to(device), ref_v.to(device)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     parser = make_learn_parser()
 
-    parser.add_argument("--lrc", default=LEARNING_RATE_CRITIC, type=float, help="Critic learning rate")
-    parser.add_argument("--lra", default=LEARNING_RATE_ACTOR, type=float, help="Actor learning rate")
+    parser.add_argument('--lrc', default=LEARNING_RATE_CRITIC, type=float, help='Critic learning rate')
+    parser.add_argument('--lra', default=LEARNING_RATE_ACTOR, type=float, help='Actor learning rate')
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, "ppo")
+    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'ppo')
 
     env = gym.make(args.env)
 
     net_act, net_crt = make_nets(args, env, device)
 
-    writer = SummaryWriter(comment="-ppo_" + args.name)
+    writer = SummaryWriter(comment='-ppo_' + args.env)
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     tstart = time.time()
 
     with ptan.common.utils.RewardTracker(writer) as tracker:
+
         for step_idx, exp in enumerate(exp_source):
 
             if len(tracker.total_rewards) >= maxeps:
@@ -88,7 +89,7 @@ if __name__ == "__main__":
 
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
-                writer.add_scalar("episode_steps", np.mean(steps), step_idx)
+                writer.add_scalar('episode_steps', np.mean(steps), step_idx)
                 tracker.reward(np.mean(rewards), step_idx)
 
             tcurr = time.time()
@@ -98,17 +99,20 @@ if __name__ == "__main__":
 
             if step_idx % args.test_iters == 0:
                 reward, steps = test_net(net_act, test_env, device=device)
-                print("Test done in %.2f sec, reward %.3f, steps %d" % (
-                    time.time() - tcurr, reward, steps))
-                writer.add_scalar("test_reward", reward, step_idx)
-                writer.add_scalar("test_steps", steps, step_idx)
+                print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
+                writer.add_scalar('test_reward', reward, step_idx)
+                writer.add_scalar('test_steps', steps, step_idx)
+                name = '%+.3f_%d.dat' % (reward, step_idx)
+                fname = os.path.join(save_path, name)
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
-                        print("Best reward updated: %.3f -> %.3f" % (best_reward, reward))
-                        name = "best_%+.3f_%d.dat" % (reward, step_idx)
-                        fname = os.path.join(save_path, name)
+                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
                         torch.save(net_act.state_dict(), fname)
                     best_reward = reward
+                if args.target is not None and reward >= args.target:
+                    print('Target %f achieved; saving %s' % (args.target,fname))
+                    torch.save(net_act.state_dict(), fname)
+                    break
 
             trajectory.append(exp)
             if len(trajectory) < TRAJECTORY_SIZE:
@@ -120,11 +124,9 @@ if __name__ == "__main__":
             traj_states_v = traj_states_v.to(device)
             traj_actions_v = torch.FloatTensor(traj_actions)
             traj_actions_v = traj_actions_v.to(device)
-            traj_adv_v, traj_ref_v = calc_adv_ref(
-                trajectory, net_crt, traj_states_v, device=device)
+            traj_adv_v, traj_ref_v = calc_adv_ref(trajectory, net_crt, traj_states_v, device=device)
             mu_v = net_act(traj_states_v)
-            old_logprob_v = calc_logprob(
-                mu_v, net_act.logstd, traj_actions_v)
+            old_logprob_v = calc_logprob( mu_v, net_act.logstd, traj_actions_v)
 
             # normalize advantages
             traj_adv_v = traj_adv_v - torch.mean(traj_adv_v)
@@ -139,8 +141,9 @@ if __name__ == "__main__":
             count_steps = 0
 
             for epoch in range(PPO_EPOCHS):
-                for batch_ofs in range(0, len(trajectory),
-                                       PPO_BATCH_SIZE):
+
+                for batch_ofs in range(0, len(trajectory), PPO_BATCH_SIZE):
+
                     batch_l = batch_ofs + PPO_BATCH_SIZE
                     states_v = traj_states_v[batch_ofs:batch_l]
                     actions_v = traj_actions_v[batch_ofs:batch_l]
@@ -166,9 +169,7 @@ if __name__ == "__main__":
                     ratio_v = torch.exp(
                         logprob_pi_v - batch_old_logprob_v)
                     surr_obj_v = batch_adv_v * ratio_v
-                    c_ratio_v = torch.clamp(ratio_v,
-                                            1.0 - PPO_EPS,
-                                            1.0 + PPO_EPS)
+                    c_ratio_v = torch.clamp(ratio_v, 1.0 - PPO_EPS, 1.0 + PPO_EPS)
                     clipped_surr_v = batch_adv_v * c_ratio_v
                     loss_policy_v = -torch.min(
                         surr_obj_v, clipped_surr_v).mean()
@@ -180,8 +181,8 @@ if __name__ == "__main__":
                     count_steps += 1
 
             trajectory.clear()
-            writer.add_scalar("advantage", traj_adv_v.mean().item(), step_idx)
-            writer.add_scalar("values", traj_ref_v.mean().item(), step_idx)
-            writer.add_scalar("loss_policy", sum_loss_policy / count_steps, step_idx)
-            writer.add_scalar("loss_value", sum_loss_value / count_steps, step_idx)
+            writer.add_scalar('advantage', traj_adv_v.mean().item(), step_idx)
+            writer.add_scalar('values', traj_ref_v.mean().item(), step_idx)
+            writer.add_scalar('loss_policy', sum_loss_policy / count_steps, step_idx)
+            writer.add_scalar('loss_value', sum_loss_value / count_steps, step_idx)
 
