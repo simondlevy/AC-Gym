@@ -30,7 +30,7 @@ def main():
     parser.add_argument('--policy_noise', default=0.2,              help='Noise added to target policy during critic update')
     parser.add_argument('--noise_clip', default=0.5,                help='Range to clip target policy noise')
     parser.add_argument('--policy_freq', default=2, type=int,       help='Frequency of delayed policy updates')
-    parser.add_argument('--load_model', default='',                 help='Model load file name')
+    parser.add_argument('--load_model',                             help='Model load file name')
     parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     args = parser.parse_args()
 
@@ -63,11 +63,8 @@ def main():
 		noise_clip=args.noise_clip * max_action,
 		policy_freq=args.policy_freq)
 
-    file_name = args.env + '_' + str(args.seed) 
-	
-    if args.load_model != '':
-        policy_file = file_name if args.load_model == 'default' else args.load_model
-        policy.load(policy_file)
+    if args.load_model is not None: 
+        policy.load(args.load_model)
 
     replay_buffer = ReplayBuffer(state_dim, action_dim)
 
@@ -122,8 +119,9 @@ def main():
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
             evaluations.append(avg_reward)
-            np.save('./runs/td3-%s'%file_name, evaluations)
-            policy.save('./models/td3-%s'% file_name)
+            filename = 'td-%s' % args.env
+            np.save('./runs/' + filename, evaluations)
+            policy.save('./models/' + filename)
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
