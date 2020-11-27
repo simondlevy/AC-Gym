@@ -2,7 +2,7 @@
 import argparse
 from gym import wrappers
 
-from lib import model, kfac
+from lib import model
 from PIL import Image
 import os
 
