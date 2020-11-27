@@ -5,6 +5,7 @@ from gym import wrappers
 from lib import model
 from PIL import Image
 import os
+import time
 
 import numpy as np
 import torch
@@ -15,7 +16,7 @@ def main():
     parser.add_argument('filename', metavar='FILENAME', help='input file')
     parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
-    parser.add_argument('--record', help='If specified, sets the recording dir')
+    parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
@@ -43,6 +44,9 @@ def main():
         if np.isscalar(action): 
             action = [action]
         obs, reward, done, _ = env.step(action)
+        if args.record is None:
+            env.render()
+            time.sleep(.02)
         total_reward += reward
         total_steps += 1
         if done:
