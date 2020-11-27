@@ -2,17 +2,27 @@
 import argparse
 import time
 
+import gym
 from gym import wrappers
 
 from lib import model
+from td3 import TD3, eval_policy
 
 import numpy as np
 import torch
-import gym
 
 def run_td3(env, args):
 
-    return
+    # Target policy smoothing is scaled wrt the action scale
+    policy = TD3(
+            env.observation_space.shape[0],
+            env.action_space.shape[0],
+            float(env.action_space.high[0]),
+            args.nhid)
+
+    policy.load(args.filename)
+
+    return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
 
 def run_other(env, args):
 
