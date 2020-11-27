@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import time
+import pickle
 
 import gym
 from gym import wrappers
@@ -52,6 +53,7 @@ def run_other(env, args):
 
 
 def main():
+
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
     parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
