@@ -10,8 +10,6 @@ import os
 def make_nets(args, env, device):
     net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid).to(device)
     net_crt = model.ModelCritic(env.observation_space.shape[0], args.nhid).to(device)
-    print(net_act)
-    print(net_crt)
     return net_act, net_crt
 
 def make_learn_parser():

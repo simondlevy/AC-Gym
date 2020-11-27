@@ -17,8 +17,8 @@ def eval_policy_learn(policy, env, seed, eval_episodes=10):
 def main():
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', default='LunarLanderContinuous-v2',help='OpenAI gym environment name')
-    parser.add_argument('--nhid', default='256',type=int,           help='Number of hidden units')
+    parser.add_argument('--env', default='Pendulum-v0',             help='OpenAI gym environment name')
+    parser.add_argument('--nhid', default='64',type=int,            help='Number of hidden units')
     parser.add_argument('--seed', default=0, type=int,              help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument('--start_timesteps', default=25e3, type=int,help='Time steps initial random policy is used')
     parser.add_argument('--eval_freq', default=5e3, type=int,       help='How often (time steps, we evaluate')
@@ -39,11 +39,11 @@ def main():
     print('Env: %s, Seed: %d' % (args.env, args.seed))
     print('---------------------------------------')
 
-    if not os.path.exists('./td3-runs'):
-        os.makedirs('./td3-runs')
+    if not os.path.exists('./runs'):
+        os.makedirs('./runs')
 
-    if not os.path.exists('./td3-models'):
-        os.makedirs('./td3-models')
+    if not os.path.exists('./models'):
+        os.makedirs('./models')
 
     env = gym.make(args.env)
 
