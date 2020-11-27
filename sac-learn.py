@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import time
 import gym
 from tensorboardX import SummaryWriter
@@ -10,16 +9,16 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-BATCH_SIZE = 64
-LR_ACTS = 1e-4
-LR_VALS = 1e-4
-REPLAY_SIZE = 100000
-REPLAY_INITIAL = 10000
-SAC_ENTROPY_ALPHA = 0.1
-
 if __name__ == '__main__':
 
     parser = make_learn_parser()
+
+    parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
+    parser.add_argument('--lr-actor', default=1e-4, type=float, help='Learning rate for actor')
+    parser.add_argument('--lr-values', default=1e-4, type=float, help='Learning rate for values')
+    parser.add_argument('--replay-size', default=100000, type=int, help='Replay size')
+    parser.add_argument('--replay-initial', default=10000, type=int, help='Initial replay size')
+    parser.add_argument('--entropy-alpha', default=0.1, type=float, help='Entropy alpha')
 
     args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'sac')
 
@@ -36,10 +35,10 @@ if __name__ == '__main__':
     exp_source = ptan.experience.ExperienceSourceFirstLast(
         env, agent, gamma=args.gamma, steps_count=1)
     buffer = ptan.experience.ExperienceReplayBuffer(
-        exp_source, buffer_size=REPLAY_SIZE)
-    act_opt = optim.Adam(net_act.parameters(), lr=LR_ACTS)
-    crt_opt = optim.Adam(net_crt.parameters(), lr=LR_VALS)
-    twinq_opt = optim.Adam(twinq_net.parameters(), lr=LR_VALS)
+        exp_source, buffer_size=args.replay_size)
+    act_opt = optim.Adam(net_act.parameters(), lr=args.lr_actor)
+    crt_opt = optim.Adam(net_crt.parameters(), lr=args.lr_values)
+    twinq_opt = optim.Adam(twinq_net.parameters(), lr=args.lr_values)
 
     step_idx = 0
     best_reward = None
@@ -62,15 +61,15 @@ if __name__ == '__main__':
                     tb_tracker.track('episode_steps', steps[0], step_idx)
                     tracker.reward(rewards[0], step_idx)
 
-                if len(buffer) < REPLAY_INITIAL:
+                if len(buffer) < args.replay_initial:
                     continue
 
-                batch = buffer.sample(BATCH_SIZE)
+                batch = buffer.sample(args.batch_size)
                 states_v, actions_v, ref_vals_v, ref_q_v = \
                     common.unpack_batch_sac(
                         batch, tgt_net_crt.target_model,
                         twinq_net, net_act, args.gamma,
-                        SAC_ENTROPY_ALPHA, device)
+                        args.entropy_alpha, device)
 
                 tb_tracker.track('ref_v', ref_vals_v.mean(), step_idx)
                 tb_tracker.track('ref_q', ref_q_v.mean(), step_idx)

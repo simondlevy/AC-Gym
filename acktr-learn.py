@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 import math
 import time
 from tensorboardX import SummaryWriter
