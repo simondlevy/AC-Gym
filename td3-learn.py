@@ -119,7 +119,7 @@ def main():
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
             evaluations.append(avg_reward)
-            filename = 'td-%s' % args.env
+            filename = 'td3-%s' % args.env
             np.save('./runs/' + filename, evaluations)
             policy.save('./models/' + filename)
             if avg_reward >= args.target:
