@@ -77,7 +77,6 @@ if __name__ == '__main__':
                         torch.save(net_act.state_dict(), fname)
                         break
 
-
                 batch.append(exp)
                 if len(batch) < args.batch_size:
                     continue
