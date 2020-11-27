@@ -1,5 +1,5 @@
 import gym
-import ptan
+from lib import ptan
 import numpy as np
 import torch
 import math

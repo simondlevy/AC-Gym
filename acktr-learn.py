@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import math
-import ptan
+from lib import ptan
 import time
 from tensorboardX import SummaryWriter
 
