@@ -173,23 +173,58 @@ class TD3(object):
 		
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
-def eval_policy(policy, env_name, seed=None, eval_episodes=10, render=False):
-
-    eval_env = gym.make(env_name)
+def eval_policy(policy, env, seed=None, eval_episodes=10, render=False):
 
     if seed is not None:
-        eval_env.seed(seed + 100)
+        env.seed(seed + 100)
 
     total_reward = 0.
 
     for _ in range(eval_episodes):
-        state, done = eval_env.reset(), False
+        state, done = env.reset(), False
         while not done:
             action = policy.select_action(np.array(state))
-            state, reward, done, _ = eval_env.step(action)
+            state, reward, done, _ = env.step(action)
             if render:
-                eval_env.render('rgb-array')
+                env.render('rgb-array')
                 time.sleep(.02)
             total_reward += reward
 
     return total_reward / eval_episodes
+
+class ReplayBuffer(object):
+	def __init__(self, state_dim, action_dim, max_size=int(1e6)):
+		self.max_size = max_size
+		self.ptr = 0
+		self.size = 0
+
+		self.state = np.zeros((max_size, state_dim))
+		self.action = np.zeros((max_size, action_dim))
+		self.next_state = np.zeros((max_size, state_dim))
+		self.reward = np.zeros((max_size, 1))
+		self.not_done = np.zeros((max_size, 1))
+
+		self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+	def add(self, state, action, next_state, reward, done):
+		self.state[self.ptr] = state
+		self.action[self.ptr] = action
+		self.next_state[self.ptr] = next_state
+		self.reward[self.ptr] = reward
+		self.not_done[self.ptr] = 1. - done
+
+		self.ptr = (self.ptr + 1) % self.max_size
+		self.size = min(self.size + 1, self.max_size)
+
+
+	def sample(self, batch_size):
+		ind = np.random.randint(0, self.size, size=batch_size)
+
+		return (
+			torch.FloatTensor(self.state[ind]).to(self.device),
+			torch.FloatTensor(self.action[ind]).to(self.device),
+			torch.FloatTensor(self.next_state[ind]).to(self.device),
+			torch.FloatTensor(self.reward[ind]).to(self.device),
+			torch.FloatTensor(self.not_done[ind]).to(self.device)
+		)

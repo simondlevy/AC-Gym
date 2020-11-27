@@ -5,11 +5,10 @@ import gym
 import argparse
 import os
 
-from replay import ReplayBuffer
-from td3 import TD3, eval_policy
+from td3 import TD3, ReplayBuffer, eval_policy
 
-def eval_policy_learn(policy, env_name, seed, eval_episodes=10):
-    avg_reward = eval_policy(policy, env_name, seed, eval_episodes)
+def eval_policy_learn(policy, env, seed, eval_episodes=10):
+    avg_reward = eval_policy(policy, env, seed, eval_episodes)
     print('---------------------------------------')
     print('Evaluation over %d episodes: %.3f' % (eval_episodes, avg_reward))
     print('---------------------------------------')
@@ -77,9 +76,11 @@ def main():
         policy.load(policy_file)
 
     replay_buffer = ReplayBuffer(state_dim, action_dim)
+
+    env = gym.make(args.env)
     
     # Evaluate untrained policy
-    evaluations = [eval_policy_learn(policy, args.env, args.seed)]
+    evaluations = [eval_policy_learn(policy, env, args.seed)]
 
     state, done = env.reset(), False
     episode_reward = 0
@@ -125,7 +126,7 @@ def main():
 
         # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
-            avg_reward = eval_policy_learn(policy, args.env, args.seed)
+            avg_reward = eval_policy_learn(policy, env, args.seed)
             evaluations.append(avg_reward)
             np.save('./td3-runs/%s'%file_name, evaluations)
             policy.save('./td3-models/%s'% file_name)

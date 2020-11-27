@@ -43,7 +43,7 @@ def main():
 
     policy.load(args.filename)
 
-    print(eval_policy(policy, args.env, seed=None, render=(args.record is None), eval_episodes=1))
+    print(eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1))
 
 if __name__ == '__main__':
     main()
