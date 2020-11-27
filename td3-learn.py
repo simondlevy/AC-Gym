@@ -52,25 +52,21 @@ def main():
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     
-    state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0] 
     max_action = float(env.action_space.high[0])
+    state_dim = env.observation_space.shape[0]
+    action_dim = env.action_space.shape[0]
 
-    kwargs = {
-        'state_dim': state_dim,
-        'action_dim': action_dim,
-        'max_action': max_action,
-        'discount': args.discount,
-        'tau': args.tau,
-    }
-
-    # Target policy smoothing is scaled wrt the action scale
-    kwargs['policy_noise'] = args.policy_noise * max_action
-    kwargs['noise_clip'] = args.noise_clip * max_action
-    kwargs['policy_freq'] = args.policy_freq
-    kwargs['nhid'] = args.nhid
-    policy = TD3(**kwargs)
-
+    policy = TD3(
+        state_dim,
+        action_dim,
+		max_action,
+        args.nhid,
+		discount=args.discount,
+		tau=args.tau,
+		policy_noise=args.policy_noise * max_action,
+		noise_clip=args.noise_clip * max_action,
+		policy_freq=args.policy_freq)
+	
     if args.load_model != '':
         policy_file = file_name if args.load_model == 'default' else args.load_model
         policy.load(policy_file)

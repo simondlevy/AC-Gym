@@ -27,19 +27,12 @@ def main():
     if args.record:
         env = wrappers.Monitor(env, args.record)
         
-    state_dim = env.observation_space.shape[0]
-    action_dim = env.action_space.shape[0] 
-    max_action = float(env.action_space.high[0])
-
-    kwargs = {
-        'state_dim': state_dim,
-        'action_dim': action_dim,
-        'max_action': max_action,
-    }
-
     # Target policy smoothing is scaled wrt the action scale
-    kwargs['nhid'] = args.nhid
-    policy = TD3(**kwargs)
+    policy = TD3(
+            env.observation_space.shape[0],
+            env.action_space.shape[0],
+            float(env.action_space.high[0]),
+            args.nhid)
 
     policy.load(args.filename)
 

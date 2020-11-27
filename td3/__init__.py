@@ -66,19 +66,19 @@ class Critic(nn.Module):
 		return q1
 
 
-class TD3(object):
+class TD3:
+
 	def __init__(
 		self,
 		state_dim,
 		action_dim,
 		max_action,
+        nhid,
 		discount=0.99,
 		tau=0.005,
 		policy_noise=0.2,
 		noise_clip=0.5,
-		policy_freq=2,
-        nhid=256
-	):
+		policy_freq=2):
 
 		self.actor = Actor(state_dim, action_dim, max_action, nhid).to(device)
 		self.actor_target = copy.deepcopy(self.actor)
@@ -192,7 +192,7 @@ def eval_policy(policy, env, seed=None, eval_episodes=10, render=False):
 
     return total_reward / eval_episodes
 
-class ReplayBuffer(object):
+class ReplayBuffer:
 	def __init__(self, state_dim, action_dim, max_size=int(1e6)):
 		self.max_size = max_size
 		self.ptr = 0
