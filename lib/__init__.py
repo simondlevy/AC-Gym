@@ -17,7 +17,7 @@ def make_nets(args, env, device):
     print(net_crt)
     return net_act, net_crt
 
-def make_parser(env_id="Pendulum-v0", nhid=64, test_iters=100000):
+def make_learn_parser(env_id="Pendulum-v0", nhid=64, test_iters=100000):
     parser = argparse.ArgumentParser()
     parser.add_argument("--cuda", default=False, action='store_true', help='Enable CUDA')
     parser.add_argument("-n", "--name", required=True, help="Name of the run")

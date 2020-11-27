@@ -4,7 +4,7 @@ import ptan
 import time
 from tensorboardX import SummaryWriter
 
-from lib import model, common, test_net, make_parser, parse_args, make_env, make_nets
+from lib import model, common, test_net, make_learn_parser, parse_args, make_env, make_nets
 
 import torch
 import torch.optim as optim
@@ -20,7 +20,7 @@ SAC_ENTROPY_ALPHA = 0.1
 
 if __name__ == "__main__":
 
-    parser = make_parser(test_iters=10000)
+    parser = make_learn_parser(test_iters=10000)
 
     args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, "sac")
 

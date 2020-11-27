@@ -5,7 +5,7 @@ import ptan
 import time
 from tensorboardX import SummaryWriter
 
-from lib import model, common, test_net, calc_logprob, make_parser, parse_args, make_env, make_nets
+from lib import model, common, test_net, calc_logprob, make_learn_parser, parse_args, make_env, make_nets
 
 import numpy as np
 import torch
@@ -22,7 +22,7 @@ ENVS_COUNT = 16
 
 if __name__ == "__main__":
 
-    parser = make_parser()
+    parser = make_learn_parser()
 
     args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, "a2c")
 

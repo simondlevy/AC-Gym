@@ -4,7 +4,7 @@ import ptan
 import time
 from tensorboardX import SummaryWriter
 
-from lib import model, test_net, calc_logprob, make_parser, parse_args, make_env, make_nets
+from lib import model, test_net, calc_logprob, make_learn_parser, parse_args, make_env, make_nets
 
 import numpy as np
 import torch
@@ -56,7 +56,7 @@ def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
 
 if __name__ == "__main__":
 
-    parser = make_parser()
+    parser = make_learn_parser()
 
     parser.add_argument("--lrc", default=LEARNING_RATE_CRITIC, type=float, help="Critic learning rate")
     parser.add_argument("--lra", default=LEARNING_RATE_ACTOR, type=float, help="Actor learning rate")
