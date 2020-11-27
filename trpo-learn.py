@@ -11,21 +11,13 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-GAE_LAMBDA = 0.95
-
-TRAJECTORY_SIZE = 2049
-LEARNING_RATE_CRITIC = 1e-3
-
-TRPO_MAX_KL = 0.01
-TRPO_DAMPING = 0.1
-
-def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
-    """
+def calc_adv_ref(trajectory, net_crt, states_v, device='cpu'):
+    '''
     By trajectory calculate advantage and 1-step ref value
     :param trajectory: list of Experience objects
     :param net_crt: critic network
     :return: tuple with advantage numpy array and reference values
-    """
+    '''
     values_v = net_crt(states_v)
     values = values_v.squeeze().data.cpu().numpy()
     # generalized advantage estimator: smoothed version of the advantage
@@ -39,7 +31,7 @@ def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
             last_gae = delta
         else:
             delta = exp.reward + args.gamma * next_val - val
-            last_gae = delta + args.gamma * GAE_LAMBDA * last_gae
+            last_gae = delta + args.gamma * args.gae_lambda * last_gae
         result_adv.append(last_gae)
         result_ref.append(last_gae + val)
 
@@ -48,20 +40,23 @@ def calc_adv_ref(trajectory, net_crt, states_v, device="cpu"):
     return adv_v, ref_v
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     parser = make_learn_parser()
 
-    parser.add_argument("--lr", default=LEARNING_RATE_CRITIC, type=float, help="Critic learning rate")
-    parser.add_argument("--maxkl", default=TRPO_MAX_KL, type=float, help="Maximum KL divergence")
+    parser.add_argument('--lr', default=1e-3, type=float, help='Critic learning rate')
+    parser.add_argument('--maxkl', default=0.01, type=float, help='Maximum KL divergence')
+    parser.add_argument('--damping', default=0.1, type=float, help='Damping')
+    parser.add_argument('--gae-lambda', default=0.95, type=float, help='Lambda for Generalized Advantage Estimation')
+    parser.add_argument('--traj-size', default=2049, type=int, help='Trajectory size')
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, "trpo")
+    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'trpo')
 
     env = gym.make(args.env)
 
     net_act, net_crt = make_nets(args, env, device)
 
-    writer = SummaryWriter(comment="-trpo_" + args.env)
+    writer = SummaryWriter(comment='-trpo_' + args.env)
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
@@ -83,7 +78,7 @@ if __name__ == "__main__":
 
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
-                writer.add_scalar("episode_steps", np.mean(steps), step_idx)
+                writer.add_scalar('episode_steps', np.mean(steps), step_idx)
                 tracker.reward(np.mean(rewards), step_idx)
 
                 if (tcurr-tstart) >= maxsec:
@@ -91,16 +86,16 @@ if __name__ == "__main__":
                 
             if step_idx % args.test_iters == 0:
                 reward, steps = test_net(net_act, test_env, device=device)
-                print("Test done in %.2f sec, reward %.3f, steps %d" % (
+                print('Test done in %.2f sec, reward %.3f, steps %d' % (
                     time.time() - tcurr, reward, steps))
-                writer.add_scalar("test_reward", reward, step_idx)
-                writer.add_scalar("test_steps", steps, step_idx)
+                writer.add_scalar('test_reward', reward, step_idx)
+                writer.add_scalar('test_steps', steps, step_idx)
                 name = '%+.3f_%d.dat' % (reward, step_idx)
                 fname = save_path + name
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
-                        print("Best reward updated: %.3f -> %.3f" % (best_reward, reward))
-                        name = "best_%+.3f_%d.dat" % (reward, step_idx)
+                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
+                        name = 'best_%+.3f_%d.dat' % (reward, step_idx)
                         torch.save(net_act.state_dict(), fname)
                     best_reward = reward
                 if args.target is not None and reward >= args.target:
@@ -109,7 +104,7 @@ if __name__ == "__main__":
                     break
 
             trajectory.append(exp)
-            if len(trajectory) < TRAJECTORY_SIZE:
+            if len(trajectory) < args.traj_size:
                 continue
 
             traj_states = [t[0].state for t in trajectory]
@@ -161,11 +156,10 @@ if __name__ == "__main__":
                 kl = logstd_v - logstd0_v + v - 0.5
                 return kl.sum(1, keepdim=True)
 
-            trpo.trpo_step(net_act, get_loss, get_kl, args.maxkl,
-                           TRPO_DAMPING, device=device)
+            trpo.trpo_step(net_act, get_loss, get_kl, args.maxkl, args.damping, device=device)
 
             trajectory.clear()
-            writer.add_scalar("advantage", traj_adv_v.mean().item(), step_idx)
-            writer.add_scalar("values", traj_ref_v.mean().item(), step_idx)
-            writer.add_scalar("loss_value", loss_value_v.item(), step_idx)
+            writer.add_scalar('advantage', traj_adv_v.mean().item(), step_idx)
+            writer.add_scalar('values', traj_ref_v.mean().item(), step_idx)
+            writer.add_scalar('loss_value', loss_value_v.item(), step_idx)
 
