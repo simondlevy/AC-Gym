@@ -10,6 +10,10 @@ import numpy as np
 import torch
 import gym
 
+def run_td3(env, args):
+
+    return
+
 def run_other(env, args):
 
     net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
@@ -56,7 +60,7 @@ def main():
     if args.record:
         env = wrappers.Monitor(env, args.record)
 
-    steps, reward = run_other(env, args)
+    steps, reward = run_td3(env, args) if 'td3' in args.filename else run_other(env, args)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
     env.close()

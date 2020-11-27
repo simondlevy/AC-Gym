@@ -124,8 +124,8 @@ def main():
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
             evaluations.append(avg_reward)
-            np.save('./td3-runs/%s'%file_name, evaluations)
-            policy.save('./td3-models/%s'% file_name)
+            np.save('./runs/td3-%s'%file_name, evaluations)
+            policy.save('./models/td3-%s'% file_name)
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
