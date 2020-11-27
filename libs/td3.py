@@ -13,7 +13,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class Actor(nn.Module):
+
     def __init__(self, state_dim, action_dim, max_action, nhid):
+
         super(Actor, self).__init__()
 
         self.l1 = nn.Linear(state_dim, nhid)
@@ -24,13 +26,16 @@ class Actor(nn.Module):
         
 
     def forward(self, state):
+
         a = F.relu(self.l1(state))
         a = F.relu(self.l2(a))
         return self.max_action * torch.tanh(self.l3(a))
 
 
 class Critic(nn.Module):
+
     def __init__(self, state_dim, action_dim, nhid):
+
         super(Critic, self).__init__()
 
         # Q1 architecture
@@ -45,6 +50,7 @@ class Critic(nn.Module):
 
 
     def forward(self, state, action):
+
         sa = torch.cat([state, action], 1)
 
         q1 = F.relu(self.l1(sa))
@@ -58,6 +64,7 @@ class Critic(nn.Module):
 
 
     def Q1(self, state, action):
+
         sa = torch.cat([state, action], 1)
 
         q1 = F.relu(self.l1(sa))
@@ -163,13 +170,6 @@ class TD3:
                     self.actor.state_dict(),
                     self.actor_optimizer.state_dict()),
                 open(filename+'.dat', 'wb'))
-
-        torch.save(self.critic.state_dict(), filename + "_critic")
-        torch.save(self.critic_optimizer.state_dict(), filename + "_critic_optimizer")
-
-        torch.save(self.actor.state_dict(), filename + "_actor")
-        torch.save(self.actor_optimizer.state_dict(), filename + "_actor_optimizer")
-
 
     def load(self, filename):
 
