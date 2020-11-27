@@ -179,6 +179,7 @@ def eval_policy(policy, env, seed=None, eval_episodes=10, render=False):
         env.seed(seed + 100)
 
     total_reward = 0.
+    total_steps = 0
 
     for _ in range(eval_episodes):
         state, done = env.reset(), False
@@ -186,11 +187,12 @@ def eval_policy(policy, env, seed=None, eval_episodes=10, render=False):
             action = policy.select_action(np.array(state))
             state, reward, done, _ = env.step(action)
             if render:
-                env.render('rgb-array')
+                env.render()
                 time.sleep(.02)
             total_reward += reward
+            total_steps += 1
 
-    return total_reward / eval_episodes
+    return total_reward / eval_episodes, total_steps//eval_episodes
 
 class ReplayBuffer:
 	def __init__(self, state_dim, action_dim, max_size=int(1e6)):

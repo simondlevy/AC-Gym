@@ -36,7 +36,10 @@ def main():
 
     policy.load(args.filename)
 
-    print(eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1))
+    reward, steps = eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
+
+    print('In %d steps we got %.3f reward' % (steps, reward))
+    env.close()
 
 if __name__ == '__main__':
     main()
