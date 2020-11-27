@@ -13,7 +13,7 @@ def make_nets(args, env, device):
     return net_act, net_crt
 
 def make_learn_parser():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env', default='Pendulum-v0', help='Environment id')
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')

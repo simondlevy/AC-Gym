@@ -16,7 +16,7 @@ def eval_policy_learn(policy, env, seed, eval_episodes=10):
 
 def main():
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env', default='Pendulum-v0',             help='OpenAI gym environment name')
     parser.add_argument('--nhid', default='64',type=int,            help='Number of hidden units')
     parser.add_argument('--seed', default=0, type=int,              help='Sets Gym, PyTorch and Numpy seeds')
@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--max_timesteps', default=1e6, type=int,   help='Max time steps to run environment')
     parser.add_argument('--expl_noise', default=0.1,                help='Std of Gaussian exploration noise')
     parser.add_argument('--batch_size', default=256, type=int,      help='Batch size for both actor and critic')
-    parser.add_argument('--gamme', default=0.99,                    help='Discount factor')
+    parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
     parser.add_argument('--tau', default=0.005,                     help='Target network update rate')
     parser.add_argument('--policy_noise', default=0.2,              help='Noise added to target policy during critic update')
     parser.add_argument('--noise_clip', default=0.5,                help='Range to clip target policy noise')
