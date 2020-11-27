@@ -1,5 +1,2 @@
 __pycache__/
-runs/
-saves/
-td3-results/
-td3-models/
+*runs

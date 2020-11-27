@@ -40,8 +40,8 @@ def main():
     print('Env: %s, Seed: %d' % (args.env, args.seed))
     print('---------------------------------------')
 
-    if not os.path.exists('./td3-results'):
-        os.makedirs('./td3-results')
+    if not os.path.exists('./td3-runs'):
+        os.makedirs('./td3-runs')
 
     if not os.path.exists('./td3-models'):
         os.makedirs('./td3-models')
@@ -127,7 +127,7 @@ def main():
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, args.env, args.seed)
             evaluations.append(avg_reward)
-            np.save('./td3-results/%s'%file_name, evaluations)
+            np.save('./td3-runs/%s'%file_name, evaluations)
             policy.save('./td3-models/%s'% file_name)
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)

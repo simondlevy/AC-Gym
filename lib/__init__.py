@@ -32,7 +32,7 @@ def make_learn_parser(env_id="Pendulum-v0", nhid=64, test_iters=100000):
 def parse_args(parser, algo):
     args = parser.parse_args()
     device = torch.device("cuda" if args.cuda else "cpu")
-    save_path = os.path.join("saves", algo + "-" + args.name)
+    save_path = os.path.join("models", algo + "-" + args.name)
     os.makedirs(save_path, exist_ok=True)
     test_env = gym.make(args.env)
     maxeps = np.inf if args.maxeps is None else args.maxeps
