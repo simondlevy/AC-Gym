@@ -15,8 +15,7 @@ def main():
     parser.add_argument('filename', metavar='FILENAME', help='input file')
     parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
-    parser.add_argument('--record', help='If specified, sets the recording dir, default=Disabled')
-    parser.add_argument('--save', type=int, help='If specified, save every N-th step as an image')
+    parser.add_argument('--record', help='If specified, sets the recording dir')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
@@ -48,12 +47,6 @@ def main():
         total_steps += 1
         if done:
             break
-        if args.save is not None and total_steps % args.save == 0:
-            o = env.render('rgb_array')
-            img = Image.fromarray(o)
-            if not os.path.exists('images'):
-                os.mkdir('images')
-            img.save('images/img_%05d.png' % total_steps)
     print('In %d steps we got %.3f reward' % (total_steps, total_reward))
     env.close()
 

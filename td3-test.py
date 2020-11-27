@@ -10,9 +10,10 @@ from evaluate import eval_policy
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
-    parser.add_argument('--env', default='Pendulum-v0',help='OpenAI gym environment name')
-    parser.add_argument('--nhid', default='64',type=int,           help='Number of hidden units')
-    parser.add_argument('--seed', default=None, type=int,           help='Sets Gym, PyTorch and Numpy seeds')
+    parser.add_argument('--env', default='Pendulum-v0', help='OpenAI gym environment name')
+    parser.add_argument('--nhid', default='64',type=int,  help='Number of hidden units')
+    parser.add_argument('--record', help='If specified, sets the recording dir')
+    parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
     env = gym.make(args.env)
@@ -22,6 +23,9 @@ def main():
         env.seed(args.seed)
         torch.manual_seed(args.seed)
         np.random.seed(args.seed)
+
+    if args.record:
+        env = wrappers.Monitor(env, args.record)
         
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0] 
