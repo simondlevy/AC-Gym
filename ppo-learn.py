@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, calc_logprob, make_learn_parser, parse_args, make_nets
+from libs import Solver, ptan, model, calc_logprob, make_learn_parser, parse_args
 
 import torch
 import torch.optim as optim
@@ -9,19 +9,36 @@ import torch.nn.functional as F
 
 class PPO(Solver):
 
-    def __init__(self, args, device, net_act, net_crt):
+    def __init__(self,
+            nhid,
+            env_name, 
+            device, 
+            gamma, 
+            lr_actor, 
+            lr_critic, 
+            batch_size,
+            traj_size):
 
-        Solver.__init__(self, args, device, net_act, net_crt)
+        env = gym.make(env_name)
 
-        self.opt_act = optim.Adam(net_act.parameters(), lr=args.lr_actor)
-        self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
+        Solver.__init__(self, nhid, 'ppo', env, device)
+
+        agent = model.AgentA2C(self.net_act, device=device)
+
+        self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
+
+        self.opt_act = optim.Adam(self.net_act.parameters(), lr=lr_actor)
+        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
 
         self.trajectory = []
+        self.batch_size = batch_size
+        self.gamma = gamma
+        self.traj_size = traj_size
 
     def update(self, exp, maxeps):
 
         self.trajectory.append(exp)
-        if len(self.trajectory) < self.args.traj_size:
+        if len(self.trajectory) < self.traj_size:
             return
 
         traj_states = [t[0].state for t in self.trajectory]
@@ -46,11 +63,11 @@ class PPO(Solver):
         sum_loss_policy = 0.0
         count_steps = 0
 
-        for epoch in range(self.args.epochs):
+        for epoch in range(self.epochs):
 
-            for batch_ofs in range(0, len(self.trajectory), self.args.batch_size):
+            for batch_ofs in range(0, len(self.trajectory), self.batch_size):
 
-                batch_l = batch_ofs + self.args.batch_size
+                batch_l = batch_ofs + self.batch_size
                 states_v = traj_states_v[batch_ofs:batch_l]
                 actions_v = traj_actions_v[batch_ofs:batch_l]
                 batch_adv_v = traj_adv_v[batch_ofs:batch_l]
@@ -75,7 +92,7 @@ class PPO(Solver):
                 ratio_v = torch.exp(
                     logprob_pi_v - batch_old_logprob_v)
                 surr_obj_v = batch_adv_v * ratio_v
-                c_ratio_v = torch.clamp(ratio_v, 1.0 - self.args.epsilon, 1.0 + self.args.epsilon)
+                c_ratio_v = torch.clamp(ratio_v, 1.0 - self.epsilon, 1.0 + self.epsilon)
                 clipped_surr_v = batch_adv_v * c_ratio_v
                 loss_policy_v = -torch.min(
                     surr_obj_v, clipped_surr_v).mean()
@@ -113,8 +130,8 @@ class PPO(Solver):
                 delta = exp.reward - val
                 last_gae = delta
             else:
-                delta = exp.reward + self.args.gamma * next_val - val
-                last_gae = delta + self.args.gamma * self.args.gae_lambda * last_gae
+                delta = exp.reward + self.gamma * next_val - val
+                last_gae = delta + self.gamma * self.gae_lambda * last_gae
             result_adv.append(last_gae)
             result_ref.append(last_gae + val)
 
@@ -137,16 +154,17 @@ def main():
 
     args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'ppo')
 
-    env = gym.make(args.env)
+    solver = PPO(
+            args.nhid,
+            args.env,
+            device,
+            args.gamma,
+            args.lr_actor,
+            args.lr_critic,
+            args.batch_size,
+            args.traj_size)
 
-    net_act, net_crt = make_nets(args, env, device)
-
-    agent = model.AgentA2C(net_act, device=device)
-    exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
-
-    solver = PPO(args, device, net_act, net_crt)
-
-    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
 
 if __name__ == '__main__':
     main()
