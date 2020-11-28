@@ -25,18 +25,13 @@ def run_td3(env, args):
 
     return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
 
-def run_other(filename, args):
+def run_other(args):
 
     d,env_name,nhid = pickle.load(open(args.filename, 'rb'))
 
-    print(d)
-    print()
-    print(env_name)
-    print()
-    print(nhid)
-    exit(0)
+    env = gym.make(env_name)
 
-    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
+    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid)
 
     net.load_state_dict(d)
 
@@ -79,7 +74,7 @@ def main():
     #if args.record:
     #    env = wrappers.Monitor(env, args.record)
 
-    reward, steps = run_td3(args.filename, args) if 'td3' in args.filename else run_other(args.filename, args)
+    reward, steps = run_td3(args) if 'td3' in args.filename else run_other(args)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
     env.close()
