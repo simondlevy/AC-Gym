@@ -79,10 +79,7 @@ class Solver:
 
         d = self._clean(self.net_act.state_dict())
 
-        print(self.env)
-        exit(0)
-
-        pickle.dump(d, open(model_fname, 'wb'))
+        pickle.dump((d,self.env_name,self.nhid), open(model_fname, 'wb'))
 
     def _clean(self, net):
 

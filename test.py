@@ -25,11 +25,18 @@ def run_td3(env, args):
 
     return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
 
-def run_other(env, args):
+def run_other(filename, args):
+
+    d,env_name,nhid = pickle.load(open(args.filename, 'rb'))
+
+    print(d)
+    print()
+    print(env_name)
+    print()
+    print(nhid)
+    exit(0)
 
     net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
-
-    d = pickle.load(open(args.filename, 'rb'))
 
     net.load_state_dict(d)
 
@@ -60,23 +67,19 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
-    parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
-    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
-    env = gym.make(args.env)
+    #if args.seed is not None:
+    #    env.seed(args.seed)
+    #    torch.manual_seed(args.seed)
+    #    np.random.seed(args.seed)
 
-    if args.seed is not None:
-        env.seed(args.seed)
-        torch.manual_seed(args.seed)
-        np.random.seed(args.seed)
+    #if args.record:
+    #    env = wrappers.Monitor(env, args.record)
 
-    if args.record:
-        env = wrappers.Monitor(env, args.record)
-
-    reward, steps = run_td3(env, args) if 'td3' in args.filename else run_other(env, args)
+    reward, steps = run_td3(args.filename, args) if 'td3' in args.filename else run_other(args.filename, args)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
     env.close()
