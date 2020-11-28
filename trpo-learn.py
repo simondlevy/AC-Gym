@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import gym
-import time
 
-from libs import ptan, model, trpo, test_net, calc_logprob, make_learn_parser, parse_args, make_nets
+from libs import ptan, model, trpo, calc_logprob, make_learn_parser, parse_args, make_nets, loop
 
-import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -37,6 +35,77 @@ def calc_adv_ref(trajectory, net_crt, states_v, device='cpu'):
     ref_v = torch.FloatTensor(list(reversed(result_ref))).to(device)
     return adv_v, ref_v
 
+class TRPO:
+
+    def __init__(self, args, device, net_act, net_crt):
+
+        self.args = args
+        self.device = device
+        self.batch = []
+        self.net_act = net_act
+        self.net_crt = net_crt
+
+        self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr)
+        self.trajectory = []
+
+    def update(self, exp, maxeps):
+
+        self.trajectory.append(exp)
+        if len(self.trajectory) < self.args.traj_size:
+            return
+
+        traj_states = [t[0].state for t in self.trajectory]
+        traj_actions = [t[0].action for t in self.trajectory]
+        traj_states_v = torch.FloatTensor(traj_states).to(self.device)
+        traj_actions_v = torch.FloatTensor(traj_actions).to(self.device)
+        traj_adv_v, traj_ref_v = calc_adv_ref(self.trajectory, self.net_crt, traj_states_v, device=self.device)
+        mu_v = net_act(traj_states_v)
+        old_logprob_v = calc_logprob(mu_v, self.net_act.logstd, traj_actions_v)
+
+        # normalize advantages
+        traj_adv_v = (traj_adv_v - torch.mean(traj_adv_v)) / torch.std(traj_adv_v)
+
+        # drop last entry from the trajectory, an our adv and ref value calculated without it
+        self.trajectory = self.trajectory[:-1]
+        old_logprob_v = old_logprob_v[:-1].detach()
+        traj_states_v = traj_states_v[:-1]
+        traj_actions_v = traj_actions_v[:-1]
+
+        # critic step
+        self.opt_crt.zero_grad()
+        value_v = self.net_crt(traj_states_v)
+        loss_value_v = F.mse_loss(
+            value_v.squeeze(-1), traj_ref_v)
+        loss_value_v.backward()
+        self.opt_crt.step()
+
+        # actor step
+        def get_loss():
+            mu_v = net_act(traj_states_v)
+            logprob_v = calc_logprob(mu_v, self.net_act.logstd, traj_actions_v)
+            dp_v = torch.exp(logprob_v - old_logprob_v)
+            action_loss_v = -traj_adv_v.unsqueeze(dim=-1)*dp_v
+            return action_loss_v.mean()
+
+        def get_kl():
+            mu_v = self.net_act(traj_states_v)
+            logstd_v = self.net_act.logstd
+            mu0_v = mu_v.detach()
+            logstd0_v = logstd_v.detach()
+            std_v = torch.exp(logstd_v)
+            std0_v = std_v.detach()
+            v = (std0_v ** 2 + (mu0_v - mu_v) ** 2) / \
+                (2.0 * std_v ** 2)
+            kl = logstd_v - logstd0_v + v - 0.5
+            return kl.sum(1, keepdim=True)
+
+        trpo.trpo_step(self.net_act, get_loss, get_kl, self.args.maxkl, self.args.damping, device=self.device)
+
+        self.trajectory.clear()
+
+    def clean(self, net):
+
+        return net
 
 if __name__ == '__main__':
 
@@ -57,99 +126,8 @@ if __name__ == '__main__':
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
-    opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr)
+    solver = TRPO(args, device, net_act, net_crt)
 
-    trajectory = []
-    best_reward = None
-    tstart = time.time()
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
 
-    with ptan.common.utils.RewardTracker() as tracker:
-        for step_idx, exp in enumerate(exp_source):
 
-            if len(tracker.total_rewards) >= maxeps:
-                break
-
-            rewards_steps = exp_source.pop_rewards_steps()
-
-            tcurr = time.time()
-
-            if rewards_steps:
-                rewards, steps = zip(*rewards_steps)
-                tracker.reward(np.mean(rewards), step_idx)
-
-                if (tcurr-tstart) >= maxsec:
-                    break
-                
-            if step_idx % args.test_iters == 0:
-                reward, steps = test_net(net_act, test_env, device=device)
-                print('Test done in %.2f sec, reward %.3f, steps %d' % (
-                    time.time() - tcurr, reward, steps))
-                name = '%+.3f_%d.dat' % (reward, step_idx)
-                fname = save_path + name
-                if best_reward is None or best_reward < reward:
-                    if best_reward is not None:
-                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        name = 'best_%+.3f_%d.dat' % (reward, step_idx)
-                        torch.save(net_act.state_dict(), fname)
-                    best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,fname))
-                    torch.save(net_act.state_dict(), fname)
-                    break
-
-            trajectory.append(exp)
-            if len(trajectory) < args.traj_size:
-                continue
-
-            traj_states = [t[0].state for t in trajectory]
-            traj_actions = [t[0].action for t in trajectory]
-            traj_states_v = torch.FloatTensor(traj_states).to(device)
-            traj_actions_v = torch.FloatTensor(traj_actions).to(device)
-            traj_adv_v, traj_ref_v = calc_adv_ref(trajectory, net_crt, traj_states_v, device=device)
-            mu_v = net_act(traj_states_v)
-            old_logprob_v = calc_logprob(mu_v, net_act.logstd, traj_actions_v)
-
-            # normalize advantages
-            traj_adv_v = (traj_adv_v - torch.mean(traj_adv_v)) / torch.std(traj_adv_v)
-
-            # drop last entry from the trajectory, an our adv and ref value calculated without it
-            trajectory = trajectory[:-1]
-            old_logprob_v = old_logprob_v[:-1].detach()
-            traj_states_v = traj_states_v[:-1]
-            traj_actions_v = traj_actions_v[:-1]
-            sum_loss_value = 0.0
-            sum_loss_policy = 0.0
-            count_steps = 0
-
-            # critic step
-            opt_crt.zero_grad()
-            value_v = net_crt(traj_states_v)
-            loss_value_v = F.mse_loss(
-                value_v.squeeze(-1), traj_ref_v)
-            loss_value_v.backward()
-            opt_crt.step()
-
-            # actor step
-            def get_loss():
-                mu_v = net_act(traj_states_v)
-                logprob_v = calc_logprob(
-                    mu_v, net_act.logstd, traj_actions_v)
-                dp_v = torch.exp(logprob_v - old_logprob_v)
-                action_loss_v = -traj_adv_v.unsqueeze(dim=-1)*dp_v
-                return action_loss_v.mean()
-
-            def get_kl():
-                mu_v = net_act(traj_states_v)
-                logstd_v = net_act.logstd
-                mu0_v = mu_v.detach()
-                logstd0_v = logstd_v.detach()
-                std_v = torch.exp(logstd_v)
-                std0_v = std_v.detach()
-                v = (std0_v ** 2 + (mu0_v - mu_v) ** 2) / \
-                    (2.0 * std_v ** 2)
-                kl = logstd_v - logstd0_v + v - 0.5
-                return kl.sum(1, keepdim=True)
-
-            trpo.trpo_step(net_act, get_loss, get_kl, args.maxkl, args.damping, device=device)
-
-            trajectory.clear()
