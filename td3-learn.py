@@ -71,7 +71,7 @@ def main():
     env = gym.make(args.env)
     
     # Evaluate untrained policy
-    evaluations = [eval_policy_learn(policy, env, args.seed)]
+    evaluations = [(1, eval_policy_learn(policy, env, args.seed))]
 
     state, done = env.reset(), False
     episode_reward = 0
@@ -115,7 +115,7 @@ def main():
             episode_timesteps = 0
             episode_num += 1 
 
-        evaluations.append(episode_reward)
+        evaluations.append((t+1,episode_reward))
 
         # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
