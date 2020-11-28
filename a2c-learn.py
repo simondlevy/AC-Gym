@@ -50,6 +50,10 @@ class A2C:
         loss_v.backward()
         self.opt_act.step()
 
+    def clean(self, net):
+
+        return net
+
 
 def main():
 

@@ -92,11 +92,11 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path):
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
                         print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(solver.net_act.state_dict(), fname)
+                        torch.save(solver.clean(solver.net_act.state_dict()), fname)
                     best_reward = reward
                 if args.target is not None and reward >= args.target:
                     print('Target %f achieved; saving %s' % (args.target,fname))
-                    torch.save(solver.net_act.state_dict(), fname)
+                    torch.save(solver.clean(solver.net_act.state_dict()), fname)
                     break
 
             solver.update(exp)
