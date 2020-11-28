@@ -7,6 +7,15 @@ import math
 import argparse
 import os
 
+class Solver:
+
+    def __init__(self, args, device, net_act, net_crt):
+
+        self.args = args
+        self.device = device
+        self.batch = []
+        self.net_act = net_act
+        self.net_crt = net_crt
 
 def make_nets(args, env, device):
     net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid).to(device)
