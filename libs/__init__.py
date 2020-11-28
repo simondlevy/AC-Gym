@@ -3,10 +3,10 @@ import gym
 from libs import ptan, model
 import numpy as np
 import torch
-import math
 import argparse
 import os
 import torch.optim as optim
+import pickle
 
 class Solver:
 
@@ -65,6 +65,8 @@ class Solver:
 
     def _save(self, model_fname):
 
+        pickle.dump(self._clean(self.net_act.state_dict()), open(model_fname+'.pkl', 'wb'))
+
         torch.save(self._clean(self.net_act.state_dict()), model_fname)
 
     def _clean(self, net):
@@ -118,7 +120,7 @@ def test_net(net, env, count=10, device='cpu'):
 
 def calc_logprob(mu_v, logstd_v, actions_v):
     p1 = - ((mu_v - actions_v) ** 2) / (2*torch.exp(logstd_v).clamp(min=1e-3))
-    p2 = - torch.log(torch.sqrt(2 * math.pi * torch.exp(logstd_v)))
+    p2 = - torch.log(torch.sqrt(2 * np.pi * torch.exp(logstd_v)))
     return p1 + p2
 
 
