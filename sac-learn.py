@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, common, make_learn_parser, parse_args, make_nets, loop
+from libs import Solver, ptan, model, common, make_learn_parser, parse_args, make_nets
 
 import torch.optim as optim
 import torch.nn.functional as F
@@ -96,4 +96,4 @@ if __name__ == '__main__':
 
     solver = SAC(args, device, net_act, net_crt, env,  exp_source)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)

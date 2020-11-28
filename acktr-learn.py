@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import math
 
-from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args, loop
+from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args
 
 import gym
 import torch
@@ -51,7 +51,7 @@ class ACKTR(Solver):
         loss_v.backward()
         self.opt_act.step()
 
-    def clean(old):
+    def _clean(self, old):
 
         # Correct for different key names in ACKTR
         new = {}
@@ -85,4 +85,4 @@ if __name__ == '__main__':
 
     solver = ACKTR(args, device, net_act, net_crt)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)

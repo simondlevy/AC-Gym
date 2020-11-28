@@ -2,7 +2,7 @@
 import math
 import gym
 
-from libs import Solver, ptan, model, common, calc_logprob, make_learn_parser, parse_args, make_nets, loop
+from libs import Solver, ptan, model, common, calc_logprob, make_learn_parser, parse_args, make_nets
 
 import torch
 import torch.optim as optim
@@ -45,10 +45,6 @@ class A2C(Solver):
         loss_v.backward()
         self.opt_act.step()
 
-    def clean(self, net):
-
-        return net
-
 def main():
 
     parser = make_learn_parser()
@@ -71,7 +67,7 @@ def main():
 
     solver = A2C(args, device, net_act, net_crt)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
 
 if __name__ == '__main__':
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args, make_nets, loop
+from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args, make_nets
 
 import torch
 import torch.optim as optim
@@ -123,6 +123,4 @@ if __name__ == '__main__':
 
     solver = TRPO(args, device, net_act, net_crt)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)
-
-
+    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)

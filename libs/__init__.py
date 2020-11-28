@@ -17,6 +17,50 @@ class Solver:
         self.net_act = net_act
         self.net_crt = net_crt
 
+    def loop(self, args, exp_source, maxeps, maxsec, test_env, models_path, runs_path):
+
+        best_reward = None
+        tstart = time()
+
+        rewards_steps = None
+
+        evaluations = []
+
+        for step_idx, exp in enumerate(exp_source):
+
+            rewards_steps = exp_source.pop_rewards_steps()
+
+            tcurr = time()
+
+            if (tcurr-tstart) >= maxsec or step_idx == maxeps:
+                break
+            
+            if rewards_steps:
+                rewards, steps = zip(*rewards_steps)
+
+            if step_idx % args.test_iters == 0:
+                reward, steps = test_net(self.net_act, test_env, device=self.device)
+                print('Episode %07d done in %.2f sec, reward %.3f, steps %d' % (step_idx, time() - tcurr, reward, steps))
+                model_fname = models_path + ('%+.3f_%d.dat' % (reward, step_idx))
+                evaluations.append((step_idx+1, reward))
+                if best_reward is None or best_reward < reward:
+                    if best_reward is not None:
+                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
+                        torch.save(self._clean(self.net_act.state_dict()), model_fname)
+                    best_reward = reward
+                if args.target is not None and reward >= args.target:
+                    print('Target %f achieved; saving %s' % (args.target,model_fname))
+                    torch.save(self._clean(self.net_act.state_dict()), model_fname)
+                    break
+
+            self.update(exp, maxeps)
+
+        np.save(runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
+
+    def _clean(self, net):
+
+        return net
+
 def make_nets(args, env, device):
     net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid).to(device)
     net_crt = model.ModelCritic(env.observation_space.shape[0], args.nhid).to(device)
@@ -72,42 +116,3 @@ def calc_logprob(mu_v, logstd_v, actions_v):
     return p1 + p2
 
 
-def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path):
-
-    best_reward = None
-    tstart = time()
-
-    rewards_steps = None
-
-    evaluations = []
-
-    for step_idx, exp in enumerate(exp_source):
-
-        rewards_steps = exp_source.pop_rewards_steps()
-
-        tcurr = time()
-
-        if (tcurr-tstart) >= maxsec or step_idx == maxeps:
-            break
-        
-        if rewards_steps:
-            rewards, steps = zip(*rewards_steps)
-
-        if step_idx % args.test_iters == 0:
-            reward, steps = test_net(solver.net_act, test_env, device=solver.device)
-            print('Episode %07d done in %.2f sec, reward %.3f, steps %d' % (step_idx, time() - tcurr, reward, steps))
-            model_fname = models_path + ('%+.3f_%d.dat' % (reward, step_idx))
-            evaluations.append((step_idx+1, reward))
-            if best_reward is None or best_reward < reward:
-                if best_reward is not None:
-                    print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                    torch.save(solver.clean(solver.net_act.state_dict()), model_fname)
-                best_reward = reward
-            if args.target is not None and reward >= args.target:
-                print('Target %f achieved; saving %s' % (args.target,model_fname))
-                torch.save(solver.clean(solver.net_act.state_dict()), model_fname)
-                break
-
-        solver.update(exp, maxeps)
-
-    np.save(runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
