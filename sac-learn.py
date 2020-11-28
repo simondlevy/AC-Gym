@@ -114,5 +114,3 @@ if __name__ == '__main__':
                     print('Target %f achieved; saving %s' % (args.target,fname))
                     torch.save(net_act.state_dict(), fname)
                     break
-
-pass
