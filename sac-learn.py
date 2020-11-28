@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     with ptan.common.utils.RewardTracker() as tracker:
 
-        while True:
+        for step_idx, exp in enumerate(exp_source):
 
             if len(tracker.total_rewards) >= maxeps:
                 break
