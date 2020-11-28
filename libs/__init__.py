@@ -6,17 +6,22 @@ import torch
 import math
 import argparse
 import os
+import torch.optim as optim
 
 class Solver:
 
-    def __init__(self, nhid, name, env, device):
+    def __init__(self, nhid, name, env, device, gamma, lr_critic):
 
         self.device = device
 
         self.net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid).to(device)
         self.net_crt = model.ModelCritic(env.observation_space.shape[0], nhid).to(device)
 
+        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
+
         self.batch = []
+
+        self.gamma = gamma
 
     def loop(self, test_iters, target, maxeps, maxsec, test_env, models_path, runs_path):
 

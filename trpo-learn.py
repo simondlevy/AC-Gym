@@ -22,17 +22,15 @@ class TRPO(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, 'trpo', env, device)
+        Solver.__init__(self, nhid, 'trpo', env, device, gamma, lr)
 
         agent = model.AgentA2C(self.net_act, device=device)
 
         self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
-        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr)
         self.trajectory = []
 
         self.traj_size = traj_size
-        self.gamma = gamma
         self.maxkl = maxkl 
         self.damping = damping
         self.gae_lambda = gae_lambda 

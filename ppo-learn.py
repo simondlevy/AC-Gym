@@ -21,18 +21,16 @@ class PPO(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, 'ppo', env, device)
+        Solver.__init__(self, nhid, 'ppo', env, device, gamma, lr_critic)
 
         agent = model.AgentA2C(self.net_act, device=device)
 
         self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
         self.opt_act = optim.Adam(self.net_act.parameters(), lr=lr_actor)
-        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
 
         self.trajectory = []
         self.batch_size = batch_size
-        self.gamma = gamma
         self.traj_size = traj_size
 
     def update(self, exp, maxeps):

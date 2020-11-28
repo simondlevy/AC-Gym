@@ -22,7 +22,7 @@ class SAC(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, 'sac', env, device)
+        Solver.__init__(self, nhid, 'sac', env, device, gamma, lr_values)
 
         agent = model.AgentDDPG(self.net_act, device=device)
 
@@ -34,7 +34,6 @@ class SAC(Solver):
 
         self.buffer = ptan.experience.ExperienceReplayBuffer(self.exp_source, buffer_size=replay_size)
         self.act_opt = optim.Adam(self.net_act.parameters(), lr=lr_actor)
-        self.crt_opt = optim.Adam(self.net_crt.parameters(), lr=lr_values)
         self.twinq_opt = optim.Adam(self.twinq_net.parameters(), lr=lr_values)
 
         self.replay_size = replay_size

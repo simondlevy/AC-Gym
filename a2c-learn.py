@@ -24,16 +24,14 @@ class A2C(Solver):
 
         envs = [gym.make(env_name) for _ in range(envs_count)]
 
-        Solver.__init__(self, nhid, 'a2c', envs[0], device)
+        Solver.__init__(self, nhid, 'a2c', envs[0], device, gamma, lr_critic)
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 
         self.exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, gamma, steps_count=reward_steps)
 
         self.opt_act = optim.Adam(self.net_act.parameters(), lr=lr_actor)
-        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
 
-        self.gamma = gamma
         self.batch_size = batch_size
         self.reward_steps = reward_steps
         self.entropy_beta = entropy_beta

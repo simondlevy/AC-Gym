@@ -5,7 +5,6 @@ from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_par
 
 import gym
 import torch
-import torch.optim as optim
 import torch.nn.functional as F
 
 class ACKTR(Solver):
@@ -24,16 +23,14 @@ class ACKTR(Solver):
 
         envs = [gym.make(env_name) for _ in range(envs_count)]
 
-        Solver.__init__(self, nhid, 'acktr', envs[0], device)
+        Solver.__init__(self, nhid, 'acktr', envs[0], device, gamma, lr_critic)
 
         agent = model.AgentA2C(self.net_act, device=device)
 
         self. exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, gamma, steps_count=reward_steps)
 
         self.opt_act = kfac.KFACOptimizer(self.net_act, lr=lr_actor)
-        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
 
-        self.gamma = gamma
         self.batch_size = batch_size
         self.reward_steps = reward_steps
         self.entropy_beta = entropy_beta
