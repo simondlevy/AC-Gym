@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args, make_nets
+from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args
 
 import torch
 import torch.optim as optim
@@ -9,17 +9,39 @@ import torch.nn.functional as F
 
 class TRPO(Solver):
 
-    def __init__(self, args, device, net_act, net_crt):
+    def __init__(self,
+            nhid,
+            env_name, 
+            device, 
+            gamma, 
+            lr, 
+            maxkl,
+            damping,
+            gae_lambda,
+            traj_size):
 
-        Solver.__init__(self, args, device, net_act, net_crt)
+        env = gym.make(env_name)
 
-        self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr)
+        Solver.__init__(self, nhid, 'trpo', env, device)
+
+        agent = model.AgentA2C(self.net_act, device=device)
+
+        self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
+
+        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr)
         self.trajectory = []
+
+        self.traj_size = traj_size
+        self.gamma = gamma
+        self.maxkl = maxkl 
+        self.damping = damping
+        self.gae_lambda = gae_lambda 
+
 
     def update(self, exp, maxeps):
 
         self.trajectory.append(exp)
-        if len(self.trajectory) < self.args.traj_size:
+        if len(self.trajectory) < self.traj_size:
             return
 
         traj_states = [t[0].state for t in self.trajectory]
@@ -43,7 +65,7 @@ class TRPO(Solver):
         self.opt_crt.zero_grad()
         value_v = self.net_crt(traj_states_v)
         loss_value_v = F.mse_loss(
-            value_v.squeeze(-1), traj_ref_v)
+                value_v.squeeze(-1), traj_ref_v)
         loss_value_v.backward()
         self.opt_crt.step()
 
@@ -63,11 +85,11 @@ class TRPO(Solver):
             std_v = torch.exp(logstd_v)
             std0_v = std_v.detach()
             v = (std0_v ** 2 + (mu0_v - mu_v) ** 2) / \
-                (2.0 * std_v ** 2)
+                    (2.0 * std_v ** 2)
             kl = logstd_v - logstd0_v + v - 0.5
             return kl.sum(1, keepdim=True)
 
-        trpo.trpo_step(self.net_act, get_loss, get_kl, self.args.maxkl, self.args.damping, device=self.device)
+        trpo.trpo_step(self.net_act, get_loss, get_kl, self.maxkl, self.damping, device=self.device)
 
         self.trajectory.clear()
 
@@ -93,8 +115,8 @@ class TRPO(Solver):
                 delta = exp.reward - val
                 last_gae = delta
             else:
-                delta = exp.reward + self.args.gamma * next_val - val
-                last_gae = delta + self.args.gamma * self.args.gae_lambda * last_gae
+                delta = exp.reward + self.gamma * next_val - val
+                last_gae = delta + self.gamma * self.gae_lambda * last_gae
             result_adv.append(last_gae)
             result_ref.append(last_gae + val)
 
@@ -114,16 +136,18 @@ def main():
 
     args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'trpo')
 
-    env = gym.make(args.env)
+    solver = TRPO(
+            args.nhid,
+            args.env, 
+            device, 
+            args.gamma, 
+            args.lr, 
+            args.maxkl,
+            args.damping,
+            args.gae_lambda,
+            args.traj_size)
 
-    net_act, net_crt = make_nets(args, env, device)
-
-    agent = model.AgentA2C(net_act, device=device)
-    exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
-
-    solver = TRPO(args, device, net_act, net_crt)
-
-    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
 
 if __name__ == '__main__':
     main()
