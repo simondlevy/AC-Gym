@@ -52,30 +52,10 @@ class A2C:
         loss_v.backward()
         self.opt_act.step()
 
-if __name__ == '__main__':
 
-    parser = make_learn_parser()
-
-    parser.add_argument('--reward-steps', default=5, type=int, help='Reward steps')
-    parser.add_argument('--batch-size', default=32, type=int, help='Batch size')
-    parser.add_argument('--lr-actor', default=1e-5, type=float, help='Learning rate for actor')
-    parser.add_argument('--lr-critic', default=1e-3, type=float, help='Learning rate for critic')
-    parser.add_argument('--entropy-beta', default=1e-3, type=float, help='Entropy beta')
-    parser.add_argument('--envs-count', default=16, type=int, help='Environments count')
-
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'a2c')
-
-    envs = [gym.make(args.env) for _ in range(args.envs_count)]
-
-    net_act, net_crt = make_nets(args, envs[0], device)
-
-    agent = model.AgentA2C(net_act, device=device)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
+def loop(args, exp_source, solver):
 
     best_reward = None
-    tstart = time.time()
-
-    a2c = A2C(args, device, net_act, net_crt)
 
     with ptan.common.utils.RewardTracker() as tracker:
 
@@ -110,4 +90,30 @@ if __name__ == '__main__':
                     torch.save(net_act.state_dict(), fname)
                     break
 
-            a2c.update(exp)
+            solver.update(exp)
+
+if __name__ == '__main__':
+
+    parser = make_learn_parser()
+
+    parser.add_argument('--reward-steps', default=5, type=int, help='Reward steps')
+    parser.add_argument('--batch-size', default=32, type=int, help='Batch size')
+    parser.add_argument('--lr-actor', default=1e-5, type=float, help='Learning rate for actor')
+    parser.add_argument('--lr-critic', default=1e-3, type=float, help='Learning rate for critic')
+    parser.add_argument('--entropy-beta', default=1e-3, type=float, help='Entropy beta')
+    parser.add_argument('--envs-count', default=16, type=int, help='Environments count')
+
+    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'a2c')
+
+    envs = [gym.make(args.env) for _ in range(args.envs_count)]
+
+    net_act, net_crt = make_nets(args, envs[0], device)
+
+    agent = model.AgentA2C(net_act, device=device)
+    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
+
+    tstart = time.time()
+
+    a2c = A2C(args, device, net_act, net_crt)
+
+    loop(args, exp_source, a2c)
