@@ -10,7 +10,7 @@ from libs.td3 import TD3, ReplayBuffer, eval_policy
 def eval_policy_learn(policy, env, seed, eval_episodes=10):
     avg_reward,_ = eval_policy(policy, env, seed, eval_episodes)
     print('---------------------------------------')
-    print('Evaluation over %d episodes: %.3f' % (eval_episodes, avg_reward))
+    print('Evaluation over %d episodes: %+.3f' % (eval_episodes, avg_reward))
     print('---------------------------------------')
     return avg_reward
 
@@ -120,7 +120,7 @@ def main():
         # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
-            filename = 'td3-%s%f' % (args.env, avg_reward)
+            filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
             policy.save('./models/' + filename)
             if avg_reward >= args.target:
