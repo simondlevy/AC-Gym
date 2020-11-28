@@ -8,7 +8,7 @@ This repository combines code from three sources, q.v. for details:
 * Max Lapan's [ptan](https://github.com/Shmuma/ptan)
 
 My goal with this repository is to bring all these algorithms together in a single place, with a simple, uniform
-command-line interface and minimal external dependencies.
+command-line interface and minimal external dependencies ([PyTorch](https://pytorch.org), [Gym](https://gym.openai.com/)).
 
 ## Quickstart
 
