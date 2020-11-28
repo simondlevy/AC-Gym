@@ -285,7 +285,7 @@ class TBMeanTracker:
 
     Designed and tested with pytorch-tensorboard in mind
     """
-    def __init__(self, batch_size):
+    def __init__(self, batch_size=100):
         """
         :param batch_size: integer size of batch to track
         """

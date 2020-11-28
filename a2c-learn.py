@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     with ptan.common.utils.RewardTracker() as tracker:
 
-        with ptan.common.utils.TBMeanTracker(batch_size=100) as tb_tracker:
+        with ptan.common.utils.TBMeanTracker() as tb_tracker:
 
             for step_idx, exp in enumerate(exp_source):
 
@@ -74,6 +74,7 @@ if __name__ == '__main__':
                         break
 
                 batch.append(exp)
+
                 if len(batch) < args.batch_size:
                     continue
 
