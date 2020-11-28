@@ -46,6 +46,23 @@ if __name__ == '__main__':
 
         for step_idx, exp in enumerate(exp_source):
 
+            tcurr = time.time()
+
+            if step_idx % args.test_iters == 0:
+                reward, steps = test_net(net_act, test_env, device=device)
+                print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
+                name = '%+.3f_%d.dat' % (reward, step_idx)
+                fname = save_path + name
+                if best_reward is None or best_reward < reward:
+                    if best_reward is not None:
+                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
+                        torch.save(net_act.state_dict(), fname)
+                    best_reward = reward
+                if args.target is not None and reward >= args.target:
+                    print('Target %f achieved; saving %s' % (args.target,fname))
+                    torch.save(net_act.state_dict(), fname)
+                    break
+
             if len(tracker.total_rewards) >= maxeps:
                 break
 
@@ -95,22 +112,6 @@ if __name__ == '__main__':
 
             tgt_net_crt.alpha_sync(alpha=1 - 1e-3)
 
-            tcurr = time.time()
-
             if (tcurr-tstart) >= maxsec:
                 break
 
-            if step_idx % args.test_iters == 0:
-                reward, steps = test_net(net_act, test_env, device=device)
-                print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
-                name = '%+.3f_%d.dat' % (reward, step_idx)
-                fname = save_path + name
-                if best_reward is None or best_reward < reward:
-                    if best_reward is not None:
-                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(net_act.state_dict(), fname)
-                    best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,fname))
-                    torch.save(net_act.state_dict(), fname)
-                    break
