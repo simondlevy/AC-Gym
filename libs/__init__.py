@@ -52,16 +52,20 @@ class Solver:
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
                         print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(self._clean(self.net_act.state_dict()), model_fname)
+                        self._save(model_fname)
                     best_reward = reward
                 if target is not None and reward >= target:
                     print('Target %f achieved; saving %s' % (target,model_fname))
-                    torch.save(self._clean(self.net_act.state_dict()), model_fname)
+                    self._save(model_fname)
                     break
 
             self.update(exp, maxeps)
 
         np.save(runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
+
+    def _save(self, model_fname):
+
+        torch.save(self._clean(self.net_act.state_dict()), model_fname)
 
     def _clean(self, net):
 

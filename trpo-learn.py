@@ -4,7 +4,6 @@ import gym
 from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args
 
 import torch
-import torch.optim as optim
 import torch.nn.functional as F
 
 class TRPO(Solver):
