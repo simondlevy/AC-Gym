@@ -285,14 +285,11 @@ class TBMeanTracker:
 
     Designed and tested with pytorch-tensorboard in mind
     """
-    def __init__(self, writer, batch_size):
+    def __init__(self, batch_size):
         """
-        :param writer: writer with close() and add_scalar() methods
         :param batch_size: integer size of batch to track
         """
         assert isinstance(batch_size, int)
-        assert writer is not None
-        self.writer = writer
         self.batch_size = batch_size
 
     def __enter__(self):
@@ -300,7 +297,7 @@ class TBMeanTracker:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.writer.close()
+        return
 
     @staticmethod
     def _as_float(value):
@@ -326,18 +323,15 @@ class TBMeanTracker:
         data.append(self._as_float(value))
 
         if len(data) >= self.batch_size:
-            self.writer.add_scalar(param_name, np.mean(data), iter_index)
             data.clear()
 
 
 class RewardTracker:
-    def __init__(self, writer, min_ts_diff=1.0):
+    def __init__(self, min_ts_diff=1.0):
         """
         Constructs RewardTracker
-        :param writer: writer to use for writing stats
         :param min_ts_diff: minimal time difference to track speed
         """
-        self.writer = writer
         self.min_ts_diff = min_ts_diff
 
     def __enter__(self):
@@ -347,7 +341,7 @@ class RewardTracker:
         return self
 
     def __exit__(self, *args):
-        self.writer.close()
+        return
 
     def reward(self, reward, frame, epsilon=None):
         self.total_rewards.append(reward)
@@ -362,9 +356,4 @@ class RewardTracker:
                 frame, len(self.total_rewards), mean_reward, speed, epsilon_str
             ))
             sys.stdout.flush()
-            self.writer.add_scalar("speed", speed, frame)
-        if epsilon is not None:
-            self.writer.add_scalar("epsilon", epsilon, frame)
-        self.writer.add_scalar("reward_100", mean_reward, frame)
-        self.writer.add_scalar("reward", reward, frame)
         return mean_reward if len(self.total_rewards) > 30 else None

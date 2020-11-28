@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import gym
 import time
-from tensorboardX import SummaryWriter
 
 from libs import ptan, model, trpo, test_net, calc_logprob, make_learn_parser, parse_args, make_nets
 
@@ -55,7 +54,6 @@ if __name__ == '__main__':
 
     net_act, net_crt = make_nets(args, env, device)
 
-    writer = SummaryWriter(comment='-trpo_' + args.env)
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
@@ -65,7 +63,7 @@ if __name__ == '__main__':
     best_reward = None
     tstart = time.time()
 
-    with ptan.common.utils.RewardTracker(writer) as tracker:
+    with ptan.common.utils.RewardTracker() as tracker:
         for step_idx, exp in enumerate(exp_source):
 
             if len(tracker.total_rewards) >= maxeps:
@@ -77,7 +75,6 @@ if __name__ == '__main__':
 
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
-                writer.add_scalar('episode_steps', np.mean(steps), step_idx)
                 tracker.reward(np.mean(rewards), step_idx)
 
                 if (tcurr-tstart) >= maxsec:
@@ -87,8 +84,6 @@ if __name__ == '__main__':
                 reward, steps = test_net(net_act, test_env, device=device)
                 print('Test done in %.2f sec, reward %.3f, steps %d' % (
                     time.time() - tcurr, reward, steps))
-                writer.add_scalar('test_reward', reward, step_idx)
-                writer.add_scalar('test_steps', steps, step_idx)
                 name = '%+.3f_%d.dat' % (reward, step_idx)
                 fname = save_path + name
                 if best_reward is None or best_reward < reward:
@@ -158,7 +153,3 @@ if __name__ == '__main__':
             trpo.trpo_step(net_act, get_loss, get_kl, args.maxkl, args.damping, device=device)
 
             trajectory.clear()
-            writer.add_scalar('advantage', traj_adv_v.mean().item(), step_idx)
-            writer.add_scalar('values', traj_ref_v.mean().item(), step_idx)
-            writer.add_scalar('loss_value', loss_value_v.item(), step_idx)
-

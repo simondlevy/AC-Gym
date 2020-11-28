@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import time
 import gym
-from tensorboardX import SummaryWriter
 
 from libs import ptan, model, common, test_net, make_learn_parser, parse_args, make_nets
 
@@ -30,7 +29,6 @@ if __name__ == '__main__':
 
     tgt_net_crt = ptan.agent.TargetNet(net_crt)
 
-    writer = SummaryWriter(comment='-sac_' + args.env)
     agent = model.AgentDDPG(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(
         env, agent, gamma=args.gamma, steps_count=1)
@@ -44,9 +42,9 @@ if __name__ == '__main__':
     best_reward = None
     tstart = time.time()
 
-    with ptan.common.utils.RewardTracker(writer) as tracker:
+    with ptan.common.utils.RewardTracker() as tracker:
 
-        with ptan.common.utils.TBMeanTracker(writer, batch_size=10) as tb_tracker:
+        with ptan.common.utils.TBMeanTracker(batch_size=10) as tb_tracker:
 
             while True:
 
@@ -115,8 +113,6 @@ if __name__ == '__main__':
                 if step_idx % args.test_iters == 0:
                     reward, steps = test_net(net_act, test_env, device=device)
                     print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
-                    writer.add_scalar('test_reward', reward, step_idx)
-                    writer.add_scalar('test_steps', steps, step_idx)
                     name = '%+.3f_%d.dat' % (reward, step_idx)
                     fname = save_path + name
                     if best_reward is None or best_reward < reward:
