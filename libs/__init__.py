@@ -30,11 +30,13 @@ def parse_args(parser, algo):
     args = parser.parse_args()
     device = torch.device('cuda' if args.cuda else 'cpu')
     os.makedirs('./models/', exist_ok=True)
-    save_path = './models/' + algo + '-' + args.env
+    models_path = './models/' + algo + '-' + args.env
+    os.makedirs('./runs/', exist_ok=True)
+    runs_path = './runs/' + algo + '-' + args.env
     test_env = gym.make(args.env)
     maxeps = np.inf if args.maxeps is None else args.maxeps
     maxsec = np.inf if args.maxhrs is None else (args.maxhrs * 3600)
-    return args, device, save_path, test_env, maxeps, maxsec
+    return args, device, models_path, runs_path, test_env, maxeps, maxsec
 
 def test_net(net, env, count=10, device='cpu'):
     rewards = 0.0
@@ -61,7 +63,7 @@ def calc_logprob(mu_v, logstd_v, actions_v):
     return p1 + p2
 
 
-def loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path):
+def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path):
 
     best_reward = None
     tstart = time()
@@ -82,7 +84,7 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path):
             reward, steps = test_net(solver.net_act, test_env, device=solver.device)
             print('Test done in %.2f sec, reward %.3f, steps %d' % (time() - tcurr, reward, steps))
             name = '%+.3f_%d.dat' % (reward, step_idx)
-            fname = save_path + name
+            fname = models_path + name
             if best_reward is None or best_reward < reward:
                 if best_reward is not None:
                     print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))

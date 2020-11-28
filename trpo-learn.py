@@ -116,7 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--gae-lambda', default=0.95, type=float, help='Lambda for Generalized Advantage Estimation')
     parser.add_argument('--traj-size', default=2049, type=int, help='Trajectory size')
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'trpo')
+    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'trpo')
 
     env = gym.make(args.env)
 
@@ -127,6 +127,6 @@ if __name__ == '__main__':
 
     solver = TRPO(args, device, net_act, net_crt)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)
 
 

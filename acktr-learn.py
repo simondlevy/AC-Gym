@@ -77,7 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--entropy-beta', default=1e-3, type=float, help='Entropy beta')
     parser.add_argument('--envs-count', default=16, type=int, help='Environments count')
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'acktr')
+    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'acktr')
 
     envs = [gym.make(args.env) for _ in range(args.envs_count)]
 
@@ -89,4 +89,4 @@ if __name__ == '__main__':
 
     solver = ACKTR(args, device, net_act, net_crt)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)

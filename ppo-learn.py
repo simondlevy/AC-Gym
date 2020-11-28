@@ -1,4 +1,4 @@
-#!usr/bin/env python3
+#!/usr/bin/env python3
 import gym
 
 from libs import ptan, model, calc_logprob, make_learn_parser, parse_args, make_nets, loop
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=10, type=int, help='Epochs')
     parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'ppo')
+    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'ppo')
 
     env = gym.make(args.env)
 
@@ -150,4 +150,4 @@ if __name__ == '__main__':
 
     solver = PPO(args, device, net_act, net_crt)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)

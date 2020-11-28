@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--replay-initial', default=10000, type=int, help='Initial replay size')
     parser.add_argument('--entropy-alpha', default=0.1, type=float, help='Entropy alpha')
 
-    args, device, save_path, test_env, maxeps, maxsec = parse_args(parser, 'sac')
+    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'sac')
 
     env = gym.make(args.env)
 
@@ -100,4 +100,4 @@ if __name__ == '__main__':
 
     solver = SAC(args, device, net_act, net_crt, env,  exp_source)
 
-    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_path)
