@@ -23,7 +23,7 @@ def make_learn_parser():
     parser.add_argument('--datafile', required=False, help='Name of data file to load')
     parser.add_argument('--maxeps', default=None, type=int, help='Maximum number of episodes')
     parser.add_argument('--maxhrs', default=None, type=float, help='Maximum run-time in hours')
-    parser.add_argument('--test-iters', default=100000, type=float, help='How often to test and save best')
+    parser.add_argument('--test-iters', default=100, type=float, help='How often to test and save best')
     return parser
 
 def parse_args(parser, algo):
@@ -68,6 +68,8 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_p
     best_reward = None
     tstart = time()
 
+    rewards_steps = None
+
     for step_idx, exp in enumerate(exp_source):
 
         rewards_steps = exp_source.pop_rewards_steps()
@@ -82,17 +84,19 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_p
 
         if step_idx % args.test_iters == 0:
             reward, steps = test_net(solver.net_act, test_env, device=solver.device)
-            print('Test done in %.2f sec, reward %.3f, steps %d' % (time() - tcurr, reward, steps))
-            name = '%+.3f_%d.dat' % (reward, step_idx)
-            fname = models_path + name
+            print('Episode %07d done in %.2f sec, reward %.3f, steps %d' % (step_idx, time() - tcurr, reward, steps))
+            model_fname = models_path + ('%+.3f_%d.dat' % (reward, step_idx))
             if best_reward is None or best_reward < reward:
                 if best_reward is not None:
                     print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                    torch.save(solver.clean(solver.net_act.state_dict()), fname)
+                    torch.save(solver.clean(solver.net_act.state_dict()), model_fname)
                 best_reward = reward
             if args.target is not None and reward >= args.target:
-                print('Target %f achieved; saving %s' % (args.target,fname))
-                torch.save(solver.clean(solver.net_act.state_dict()), fname)
+                print('Target %f achieved; saving %s' % (args.target,model_fname))
+                torch.save(solver.clean(solver.net_act.state_dict()), model_fname)
                 break
 
         solver.update(exp, maxeps)
+
+    if rewards_steps is not None:
+        print(rewards_steps)
