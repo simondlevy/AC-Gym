@@ -115,10 +115,11 @@ def main():
             episode_timesteps = 0
             episode_num += 1 
 
+        evaluations.append(episode_reward)
+
         # Evaluate episode
         if (t + 1) % args.eval_freq == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
-            evaluations.append(avg_reward)
             filename = 'td3-%s%f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
             policy.save('./models/' + filename)

@@ -24,3 +24,12 @@ running
 ```python3 test.py models/td3-Pendulum-v0-<REWARD>.dat```
 
 where ```<REWARD>``` is the reward value.
+
+If you have installed [matplotlib](https://matplotlib.org/), you can visualize the episode reward over time by runnin
+
+```python3 plot.py models/td3-Pendulum-v0-<REWARD>.dat```
+
+
+## Next steps
+
+Running a given script with the ```--help``` option will show you the possibilities available for using that script.
