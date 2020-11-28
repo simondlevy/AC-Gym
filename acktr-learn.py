@@ -10,9 +10,25 @@ import torch.nn.functional as F
 
 class ACKTR(Solver):
 
-    def __init__(self, args, device, net_act, net_crt):
+    def __init__(
+            nhid,
+            env_name, 
+            device, 
+            envs_count, 
+            gamma, 
+            reward_steps, 
+            lr_actor, 
+            lr_critic, 
+            batch_size, 
+            entropy_beta):
 
-        Solver.__init__(self, args, device, net_act, net_crt)
+        envs = [gym.make(env_name) for _ in range(envs_count)]
+
+        Solver.__init__(self, nhid, 'acktr', envs[0], device)
+
+        self.agent = model.AgentA2C(net_act, device=device)
+
+        self. exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
         self.opt_act = kfac.KFACOptimizer(net_act, lr=args.lr_actor)
         self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
@@ -63,6 +79,7 @@ class ACKTR(Solver):
         return new
 
 def main():
+
     parser = make_learn_parser()
 
     parser.add_argument('--reward-steps', default=5, type=int, help='Reward steps')
@@ -74,16 +91,9 @@ def main():
 
     args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'acktr')
 
-    envs = [gym.make(args.env) for _ in range(args.envs_count)]
+    solver = ACKTR( args.nhid, args.env, device, args.envs_count)
 
-    net_act, net_crt = make_nets(args, envs[0], device)
-
-    agent = model.AgentA2C(net_act, device=device)
-    exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
-
-    solver = ACKTR(args, device, net_act, net_crt)
-
-    solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
 
 if __name__ == '__main__':
     main()

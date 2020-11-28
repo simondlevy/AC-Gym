@@ -26,9 +26,9 @@ class A2C(Solver):
 
         Solver.__init__(self, nhid, 'a2c', envs[0], device)
 
-        self.agent = model.AgentA2C(self.net_act, device=self.device)
+        agent = model.AgentA2C(self.net_act, device=self.device)
 
-        self.exp_source = ptan.experience.ExperienceSourceFirstLast(envs, self.agent, gamma, steps_count=reward_steps)
+        self.exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, gamma, steps_count=reward_steps)
 
         self.opt_act = optim.Adam(self.net_act.parameters(), lr=lr_actor)
         self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
