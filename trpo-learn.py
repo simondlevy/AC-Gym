@@ -7,34 +7,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-def calc_adv_ref(trajectory, net_crt, states_v, device='cpu'):
-    '''
-    By trajectory calculate advantage and 1-step ref value
-    :param trajectory: list of Experience objects
-    :param net_crt: critic network
-    :return: tuple with advantage numpy array and reference values
-    '''
-    values_v = net_crt(states_v)
-    values = values_v.squeeze().data.cpu().numpy()
-    # generalized advantage estimator: smoothed version of the advantage
-    last_gae = 0.0
-    result_adv = []
-    result_ref = []
-    for val, next_val, (exp,) in zip(reversed(values[:-1]), reversed(values[1:]),
-                                     reversed(trajectory[:-1])):
-        if exp.done:
-            delta = exp.reward - val
-            last_gae = delta
-        else:
-            delta = exp.reward + args.gamma * next_val - val
-            last_gae = delta + args.gamma * args.gae_lambda * last_gae
-        result_adv.append(last_gae)
-        result_ref.append(last_gae + val)
-
-    adv_v = torch.FloatTensor(list(reversed(result_adv))).to(device)
-    ref_v = torch.FloatTensor(list(reversed(result_ref))).to(device)
-    return adv_v, ref_v
-
 class TRPO:
 
     def __init__(self, args, device, net_act, net_crt):
@@ -58,7 +30,7 @@ class TRPO:
         traj_actions = [t[0].action for t in self.trajectory]
         traj_states_v = torch.FloatTensor(traj_states).to(self.device)
         traj_actions_v = torch.FloatTensor(traj_actions).to(self.device)
-        traj_adv_v, traj_ref_v = calc_adv_ref(self.trajectory, self.net_crt, traj_states_v, device=self.device)
+        traj_adv_v, traj_ref_v = self.calc_adv_ref(traj_states_v)
         mu_v = net_act(traj_states_v)
         old_logprob_v = calc_logprob(mu_v, self.net_act.logstd, traj_actions_v)
 
@@ -106,6 +78,33 @@ class TRPO:
     def clean(self, net):
 
         return net
+
+    def calc_adv_ref(self, states_v):
+        '''
+        By trajectory calculate advantage and 1-step ref value
+        :param trajectory: list of Experience objects
+        :param net_crt: critic network
+        :return: tuple with advantage numpy array and reference values
+        '''
+        values_v = self.net_crt(states_v)
+        values = values_v.squeeze().data.cpu().numpy()
+        # generalized advantage estimator: smoothed version of the advantage
+        last_gae = 0.0
+        result_adv = []
+        result_ref = []
+        for val, next_val, (exp,) in zip(reversed(values[:-1]), reversed(values[1:]), reversed(self.trajectory[:-1])):
+            if exp.done:
+                delta = exp.reward - val
+                last_gae = delta
+            else:
+                delta = exp.reward + self.args.gamma * next_val - val
+                last_gae = delta + self.args.gamma * self.args.gae_lambda * last_gae
+            result_adv.append(last_gae)
+            result_ref.append(last_gae + val)
+
+        adv_v = torch.FloatTensor(list(reversed(result_adv))).to(self.device)
+        ref_v = torch.FloatTensor(list(reversed(result_ref))).to(self.device)
+        return adv_v, ref_v
 
 if __name__ == '__main__':
 
