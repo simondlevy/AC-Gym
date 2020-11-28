@@ -10,6 +10,48 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
+class SAC:
+
+    def __init__(self, args, device, net_act, net_crt):
+
+        self.args = args
+        self.device = device
+        self.batch = []
+
+        self.net_act = net_act
+        self.net_crt = net_crt
+
+        self.opt_act = optim.Adam(net_act.parameters(), lr=args.lr_actor)
+        self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
+
+    def update(self, exp):
+
+        self.batch.append(self.exp)
+
+        if len(self.batch) < self.args.batch_size:
+            return
+
+        states_v, actions_v, vals_ref_v = \
+            common.unpack_batch_a2c(self.batch, self.net_crt, 
+                    last_val_gamma=self.args.gamma ** args.reward_steps, device=self.device)
+        self.batch.clear()
+
+        self.opt_crt.zero_grad()
+        value_v = self.net_crt(states_v)
+        loss_value_v = F.mse_loss(value_v.squeeze(-1), vals_ref_v)
+        loss_value_v.backward()
+        self.opt_crt.step()
+
+        self.opt_act.zero_grad()
+        mu_v = self.net_act(states_v)
+        adv_v = vals_ref_v.unsqueeze(dim=-1) - value_v.detach()
+        log_prob_v = adv_v * calc_logprob(mu_v, net_act.logstd, actions_v)
+        loss_policy_v = -log_prob_v.mean()
+        entropy_loss_v = args.entropy_beta * (-(torch.log(2*math.pi*torch.exp(net_act.logstd)) + 1)/2).mean()
+        loss_v = loss_policy_v + entropy_loss_v
+        loss_v.backward()
+        self.opt_act.step()
+
 if __name__ == '__main__':
 
     parser = make_learn_parser()
@@ -30,12 +72,10 @@ if __name__ == '__main__':
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
-    opt_act = optim.Adam(net_act.parameters(), lr=args.lr_actor)
-    opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
-
-    batch = []
     best_reward = None
     tstart = time.time()
+
+    sac = SAC(args, device, net_act, net_crt)
 
     with ptan.common.utils.RewardTracker() as tracker:
 
@@ -70,27 +110,4 @@ if __name__ == '__main__':
                     torch.save(net_act.state_dict(), fname)
                     break
 
-            batch.append(exp)
-
-            if len(batch) < args.batch_size:
-                continue
-
-            states_v, actions_v, vals_ref_v = \
-                common.unpack_batch_a2c(batch, net_crt, last_val_gamma=args.gamma ** args.reward_steps, device=device)
-            batch.clear()
-
-            opt_crt.zero_grad()
-            value_v = net_crt(states_v)
-            loss_value_v = F.mse_loss(value_v.squeeze(-1), vals_ref_v)
-            loss_value_v.backward()
-            opt_crt.step()
-
-            opt_act.zero_grad()
-            mu_v = net_act(states_v)
-            adv_v = vals_ref_v.unsqueeze(dim=-1) - value_v.detach()
-            log_prob_v = adv_v * calc_logprob(mu_v, net_act.logstd, actions_v)
-            loss_policy_v = -log_prob_v.mean()
-            entropy_loss_v = args.entropy_beta * (-(torch.log(2*math.pi*torch.exp(net_act.logstd)) + 1)/2).mean()
-            loss_v = loss_policy_v + entropy_loss_v
-            loss_v.backward()
-            opt_act.step()
+            sac.update(exp)
