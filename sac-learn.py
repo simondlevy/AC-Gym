@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import ptan, model, common, make_learn_parser, parse_args, make_nets, loop
+from libs import Solver, ptan, model, common, make_learn_parser, parse_args, make_nets, loop
 
 import torch.optim as optim
 import torch.nn.functional as F
 
-class SAC:
+class SAC(Solver):
 
     def __init__(self, args, device, net_act, net_crt, env, exp_source):
 
-        self.args = args
-        self.device = device
-        self.batch = []
-        self.net_act = net_act
-        self.net_crt = net_crt
+        Solver.__init__(self, args, device, net_act, net_crt)
 
         self.exp_source = exp_source
 

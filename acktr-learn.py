@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 import math
 
-from libs import ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args, loop
+from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args, loop
 
 import gym
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-class ACKTR:
+class ACKTR(Solver):
 
     def __init__(self, args, device, net_act, net_crt):
 
-        self.args = args
-        self.device = device
-        self.batch = []
-        self.net_act = net_act
-        self.net_crt = net_crt
+        Solver.__init__(self, args, device, net_act, net_crt)
 
         self.opt_act = kfac.KFACOptimizer(net_act, lr=args.lr_actor)
         self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)

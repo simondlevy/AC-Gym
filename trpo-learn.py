@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import ptan, model, trpo, calc_logprob, make_learn_parser, parse_args, make_nets, loop
+from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args, make_nets, loop
 
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-class TRPO:
+class TRPO(Solver):
 
     def __init__(self, args, device, net_act, net_crt):
 
-        self.args = args
-        self.device = device
-        self.batch = []
-        self.net_act = net_act
-        self.net_crt = net_crt
+        Solver.__init__(self, args, device, net_act, net_crt)
 
         self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr)
         self.trajectory = []
