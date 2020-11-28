@@ -31,7 +31,7 @@ class PPO(Solver):
         traj_actions_v = torch.FloatTensor(traj_actions)
         traj_actions_v = traj_actions_v.to(self.device)
         traj_adv_v, traj_ref_v = self.calc_adv_ref(traj_states_v)
-        mu_v = net_act(traj_states_v)
+        mu_v = self.net_act(traj_states_v)
         old_logprob_v = calc_logprob( mu_v, self.net_act.logstd, traj_actions_v)
 
         # normalize advantages
@@ -69,7 +69,7 @@ class PPO(Solver):
 
                 # actor training
                 self.opt_act.zero_grad()
-                mu_v = net_act(states_v)
+                mu_v = self.net_act(states_v)
                 logprob_pi_v = calc_logprob(
                     mu_v, self.net_act.logstd, actions_v)
                 ratio_v = torch.exp(
@@ -100,7 +100,7 @@ class PPO(Solver):
         :param states_v: states tensor
         :return: tuple with advantage numpy array and reference values
         '''
-        values_v = net_crt(states_v)
+        values_v = self.net_crt(states_v)
         values = values_v.squeeze().data.cpu().numpy()
         # generalized advantage estimator: smoothed version of the advantage
         last_gae = 0.0
@@ -113,17 +113,17 @@ class PPO(Solver):
                 delta = exp.reward - val
                 last_gae = delta
             else:
-                delta = exp.reward + args.gamma * next_val - val
-                last_gae = delta + args.gamma * args.gae_lambda * last_gae
+                delta = exp.reward + self.args.gamma * next_val - val
+                last_gae = delta + self.args.gamma * self.args.gae_lambda * last_gae
             result_adv.append(last_gae)
             result_ref.append(last_gae + val)
 
         adv_v = torch.FloatTensor(list(reversed(result_adv)))
         ref_v = torch.FloatTensor(list(reversed(result_ref)))
-        return adv_v.to(self.device), ref_v.to(device)
+        return adv_v.to(self.device), ref_v.to(self.device)
 
 
-if __name__ == '__main__':
+def main():
 
     parser = make_learn_parser()
 
@@ -147,3 +147,6 @@ if __name__ == '__main__':
     solver = PPO(args, device, net_act, net_crt)
 
     solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+
+if __name__ == '__main__':
+    main()

@@ -27,7 +27,7 @@ class TRPO(Solver):
         traj_states_v = torch.FloatTensor(traj_states).to(self.device)
         traj_actions_v = torch.FloatTensor(traj_actions).to(self.device)
         traj_adv_v, traj_ref_v = self.calc_adv_ref(traj_states_v)
-        mu_v = net_act(traj_states_v)
+        mu_v = self.net_act(traj_states_v)
         old_logprob_v = calc_logprob(mu_v, self.net_act.logstd, traj_actions_v)
 
         # normalize advantages
@@ -49,7 +49,7 @@ class TRPO(Solver):
 
         # actor step
         def get_loss():
-            mu_v = net_act(traj_states_v)
+            mu_v = self.net_act(traj_states_v)
             logprob_v = calc_logprob(mu_v, self.net_act.logstd, traj_actions_v)
             dp_v = torch.exp(logprob_v - old_logprob_v)
             action_loss_v = -traj_adv_v.unsqueeze(dim=-1)*dp_v
@@ -102,7 +102,7 @@ class TRPO(Solver):
         ref_v = torch.FloatTensor(list(reversed(result_ref))).to(self.device)
         return adv_v, ref_v
 
-if __name__ == '__main__':
+def main():
 
     parser = make_learn_parser()
 
@@ -124,3 +124,7 @@ if __name__ == '__main__':
     solver = TRPO(args, device, net_act, net_crt)
 
     solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+
+if __name__ == '__main__':
+    main()
+

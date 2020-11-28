@@ -30,15 +30,15 @@ class SAC(Solver):
         if rewards_steps:
             rewards, steps = zip(*rewards_steps)
 
-        if len(self.buffer) < args.replay_initial:
+        if len(self.buffer) < self.args.replay_initial:
             return
 
-        batch = self.buffer.sample(args.batch_size)
+        batch = self.buffer.sample(self.args.batch_size)
         states_v, actions_v, ref_vals_v, ref_q_v = \
             common.unpack_batch_sac(
                 batch, self.tgt_net_crt.target_model,
-                self.twinq_net, net_act, args.gamma,
-                args.entropy_alpha, device)
+                self.twinq_net, self.net_act, self.args.gamma,
+                self.args.entropy_alpha, self.device)
 
         # train TwinQ
         self.twinq_opt.zero_grad()
@@ -53,15 +53,14 @@ class SAC(Solver):
 
         # Critic
         self.crt_opt.zero_grad()
-        val_v = net_crt(states_v)
-        v_loss_v = F.mse_loss(val_v.squeeze(),
-                              ref_vals_v.detach())
+        val_v = self.net_crt(states_v)
+        v_loss_v = F.mse_loss(val_v.squeeze(), ref_vals_v.detach())
         v_loss_v.backward()
         self.crt_opt.step()
 
         # Actor
         self.act_opt.zero_grad()
-        acts_v = net_act(states_v)
+        acts_v = self.net_act(states_v)
         q_out_v, _ = self.twinq_net(states_v, acts_v)
         act_loss = -q_out_v.mean()
         act_loss.backward()
@@ -73,7 +72,7 @@ class SAC(Solver):
 
         return net
 
-if __name__ == '__main__':
+def main():
 
     parser = make_learn_parser()
 
@@ -97,3 +96,6 @@ if __name__ == '__main__':
     solver = SAC(args, device, net_act, net_crt, env,  exp_source)
 
     solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+
+if __name__ == '__main__':
+    main()

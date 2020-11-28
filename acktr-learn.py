@@ -34,8 +34,8 @@ class ACKTR(Solver):
         loss_value_v.backward()
         self.opt_crt.step()
 
-        mu_v = net_act(states_v)
-        log_prob_v = calc_logprob(mu_v, net_act.logstd, actions_v)
+        mu_v = self.net_act(states_v)
+        log_prob_v = calc_logprob(mu_v, self.net_act.logstd, actions_v)
         if self.opt_act.steps % self.opt_act.Ts == 0:
             self.opt_act.zero_grad()
             pg_fisher_loss = -log_prob_v.mean()
@@ -62,8 +62,7 @@ class ACKTR(Solver):
                 new[newkey] = new[newkey].flatten()
         return new
 
-if __name__ == '__main__':
-
+def main():
     parser = make_learn_parser()
 
     parser.add_argument('--reward-steps', default=5, type=int, help='Reward steps')
@@ -86,3 +85,6 @@ if __name__ == '__main__':
     solver = ACKTR(args, device, net_act, net_crt)
 
     solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
+
+if __name__ == '__main__':
+    main()
