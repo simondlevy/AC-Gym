@@ -2,7 +2,7 @@
 import math
 import time
 
-from libs import ptan, model, common, kfac, test_net, calc_logprob, make_learn_parser, parse_args
+from libs import ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args
 
 import gym
 import numpy as np

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 import math
-import time
 import gym
 
-from libs import ptan, model, common, test_net, calc_logprob, make_learn_parser, parse_args, make_nets
+from libs import ptan, model, common, calc_logprob, make_learn_parser, parse_args, make_nets, loop
 
-import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -33,7 +31,7 @@ class A2C:
 
         states_v, actions_v, vals_ref_v = \
             common.unpack_batch_a2c(self.batch, self.net_crt, 
-                    last_val_gamma=self.args.gamma ** args.reward_steps, device=self.device)
+                    last_val_gamma=self.args.gamma ** self.args.reward_steps, device=self.device)
         self.batch.clear()
 
         self.opt_crt.zero_grad()
@@ -45,54 +43,15 @@ class A2C:
         self.opt_act.zero_grad()
         mu_v = self.net_act(states_v)
         adv_v = vals_ref_v.unsqueeze(dim=-1) - value_v.detach()
-        log_prob_v = adv_v * calc_logprob(mu_v, net_act.logstd, actions_v)
+        log_prob_v = adv_v * calc_logprob(mu_v, self.net_act.logstd, actions_v)
         loss_policy_v = -log_prob_v.mean()
-        entropy_loss_v = args.entropy_beta * (-(torch.log(2*math.pi*torch.exp(net_act.logstd)) + 1)/2).mean()
+        entropy_loss_v = self.args.entropy_beta * (-(torch.log(2*math.pi*torch.exp(self.net_act.logstd)) + 1)/2).mean()
         loss_v = loss_policy_v + entropy_loss_v
         loss_v.backward()
         self.opt_act.step()
 
 
-def loop(args, exp_source, solver):
-
-    best_reward = None
-
-    with ptan.common.utils.RewardTracker() as tracker:
-
-        for step_idx, exp in enumerate(exp_source):
-
-            if len(tracker.total_rewards) >= maxeps:
-                break
-
-            rewards_steps = exp_source.pop_rewards_steps()
-
-            tcurr = time.time()
-
-            if (tcurr-tstart) >= maxsec:
-                break
-            
-            if rewards_steps:
-                rewards, steps = zip(*rewards_steps)
-                tracker.reward(np.mean(rewards), step_idx)
-
-            if step_idx % args.test_iters == 0:
-                reward, steps = test_net(net_act, test_env, device=device)
-                print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
-                name = '%+.3f_%d.dat' % (reward, step_idx)
-                fname = save_path + name
-                if best_reward is None or best_reward < reward:
-                    if best_reward is not None:
-                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(net_act.state_dict(), fname)
-                    best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,fname))
-                    torch.save(net_act.state_dict(), fname)
-                    break
-
-            solver.update(exp)
-
-if __name__ == '__main__':
+def main():
 
     parser = make_learn_parser()
 
@@ -112,8 +71,11 @@ if __name__ == '__main__':
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
-    tstart = time.time()
-
     a2c = A2C(args, device, net_act, net_crt)
 
-    loop(args, exp_source, a2c)
+    loop(args, exp_source, a2c, maxeps, maxsec, test_env, save_path)
+
+if __name__ == '__main__':
+
+    main()
+
