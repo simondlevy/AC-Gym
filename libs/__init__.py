@@ -66,37 +66,31 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path):
     best_reward = None
     tstart = time()
 
-    with ptan.common.utils.RewardTracker() as tracker:
+    for step_idx, exp in enumerate(exp_source):
 
-        for step_idx, exp in enumerate(exp_source):
+        rewards_steps = exp_source.pop_rewards_steps()
 
-            if len(tracker.total_rewards) >= maxeps:
-                break
+        tcurr = time()
 
-            rewards_steps = exp_source.pop_rewards_steps()
+        if (tcurr-tstart) >= maxsec or step_idx == maxeps:
+            break
+        
+        if rewards_steps:
+            rewards, steps = zip(*rewards_steps)
 
-            tcurr = time()
-
-            if (tcurr-tstart) >= maxsec:
-                break
-            
-            if rewards_steps:
-                rewards, steps = zip(*rewards_steps)
-                tracker.reward(np.mean(rewards), step_idx)
-
-            if step_idx % args.test_iters == 0:
-                reward, steps = test_net(solver.net_act, test_env, device=solver.device)
-                print('Test done in %.2f sec, reward %.3f, steps %d' % (time() - tcurr, reward, steps))
-                name = '%+.3f_%d.dat' % (reward, step_idx)
-                fname = save_path + name
-                if best_reward is None or best_reward < reward:
-                    if best_reward is not None:
-                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(solver.clean(solver.net_act.state_dict()), fname)
-                    best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,fname))
+        if step_idx % args.test_iters == 0:
+            reward, steps = test_net(solver.net_act, test_env, device=solver.device)
+            print('Test done in %.2f sec, reward %.3f, steps %d' % (time() - tcurr, reward, steps))
+            name = '%+.3f_%d.dat' % (reward, step_idx)
+            fname = save_path + name
+            if best_reward is None or best_reward < reward:
+                if best_reward is not None:
+                    print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
                     torch.save(solver.clean(solver.net_act.state_dict()), fname)
-                    break
+                best_reward = reward
+            if args.target is not None and reward >= args.target:
+                print('Target %f achieved; saving %s' % (args.target,fname))
+                torch.save(solver.clean(solver.net_act.state_dict()), fname)
+                break
 
-            solver.update(exp, maxeps)
+        solver.update(exp, maxeps)
