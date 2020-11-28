@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import math
 
-from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args
+from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args, make_nets
 
 import gym
 import torch
@@ -76,8 +76,7 @@ def main():
 
     envs = [gym.make(args.env) for _ in range(args.envs_count)]
 
-    net_act = model.ModelActor(envs[0].observation_space.shape[0], envs[0].action_space.shape[0], args.nhid).to(device)
-    net_crt = model.ModelCritic(envs[0].observation_space.shape[0], args.nhid).to(device)
+    net_act, net_crt = make_nets(args, envs[0], device)
 
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)

@@ -63,6 +63,7 @@ def main():
     net_act, net_crt = make_nets(args, envs[0], device)
 
     agent = model.AgentA2C(net_act, device=device)
+
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
     solver = A2C(args, device, net_act, net_crt)
@@ -70,6 +71,5 @@ def main():
     solver.loop(args, exp_source, maxeps, maxsec, test_env, models_path, runs_path)
 
 if __name__ == '__main__':
-
     main()
 
