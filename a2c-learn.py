@@ -10,7 +10,7 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-class SAC:
+class A2C:
 
     def __init__(self, args, device, net_act, net_crt):
 
@@ -26,7 +26,7 @@ class SAC:
 
     def update(self, exp):
 
-        self.batch.append(self.exp)
+        self.batch.append(exp)
 
         if len(self.batch) < self.args.batch_size:
             return
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     best_reward = None
     tstart = time.time()
 
-    sac = SAC(args, device, net_act, net_crt)
+    a2c = A2C(args, device, net_act, net_crt)
 
     with ptan.common.utils.RewardTracker() as tracker:
 
@@ -110,4 +110,4 @@ if __name__ == '__main__':
                     torch.save(net_act.state_dict(), fname)
                     break
 
-            sac.update(exp)
+            a2c.update(exp)
