@@ -21,7 +21,7 @@ class TRPO(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, 'trpo', env, device, gamma, lr)
+        Solver.__init__(self, nhid, env, device, gamma, lr)
 
         agent = model.AgentA2C(self.net_act, device=device)
 

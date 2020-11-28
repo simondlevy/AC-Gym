@@ -21,7 +21,7 @@ class PPO(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, 'ppo', env, device, gamma, lr_critic)
+        Solver.__init__(self, nhid, env, device, gamma, lr_critic)
 
         agent = model.AgentA2C(self.net_act, device=device)
 

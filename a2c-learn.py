@@ -24,7 +24,7 @@ class A2C(Solver):
 
         envs = [gym.make(env_name) for _ in range(envs_count)]
 
-        Solver.__init__(self, nhid, 'a2c', envs[0], device, gamma, lr_critic)
+        Solver.__init__(self, nhid, envs[0], device, gamma, lr_critic)
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 

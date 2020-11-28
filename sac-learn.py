@@ -22,7 +22,7 @@ class SAC(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, 'sac', env, device, gamma, lr_values)
+        Solver.__init__(self, nhid, env, device, gamma, lr_values)
 
         agent = model.AgentDDPG(self.net_act, device=device)
 

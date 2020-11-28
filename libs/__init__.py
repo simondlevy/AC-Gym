@@ -10,9 +10,10 @@ import pickle
 
 class Solver:
 
-    def __init__(self, nhid, name, env, device, gamma, lr_critic):
+    def __init__(self, nhid, env, device, gamma, lr_critic):
 
         self.device = device
+        self.nhid = nhid
 
         self.net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid).to(device)
         self.net_crt = model.ModelCritic(env.observation_space.shape[0], nhid).to(device)
@@ -65,7 +66,9 @@ class Solver:
 
     def _save(self, model_fname):
 
-        pickle.dump(self._clean(self.net_act.state_dict()), open(model_fname, 'wb'))
+        d = self._clean(self.net_act.state_dict())
+
+        pickle.dump(d, open(model_fname, 'wb'))
 
     def _clean(self, net):
 
