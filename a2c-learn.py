@@ -2,7 +2,7 @@
 import math
 import gym
 
-from libs import Solver, ptan, model, common, calc_logprob, make_learn_parser, parse_args
+from libs import Solver, ptan, model, common, calc_logprob, make_learn_parser
 
 import torch
 import torch.optim as optim
@@ -11,9 +11,9 @@ import torch.nn.functional as F
 class A2C(Solver):
 
     def __init__(self, 
-            nhid,
             env_name, 
-            device, 
+            nhid,
+            cuda, 
             envs_count, 
             gamma, 
             reward_steps, 
@@ -24,7 +24,7 @@ class A2C(Solver):
 
         envs = [gym.make(env_name) for _ in range(envs_count)]
 
-        Solver.__init__(self, nhid, envs[0], device, gamma, lr_critic)
+        Solver.__init__(self, env_name, 'a2c', nhid, cuda, gamma, lr_critic)
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 
@@ -75,12 +75,12 @@ def main():
     parser.add_argument('--entropy-beta', default=1e-3, type=float, help='Entropy beta')
     parser.add_argument('--envs-count', default=16, type=int, help='Environments count')
 
-    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'a2c')
+    args = parser.parse_args()
 
     solver = A2C(
-            args.nhid,
             args.env, 
-            device, 
+            args.nhid,
+            args.cuda, 
             args.envs_count, 
             args.gamma, 
             args.reward_steps, 
@@ -89,7 +89,7 @@ def main():
             args.batch_size, 
             args.entropy_beta)
 
-    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, args.maxeps, args.maxhrs)
 
 if __name__ == '__main__':
 

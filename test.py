@@ -55,7 +55,7 @@ def run_other(args):
         if done:
             break
 
-    return total_reward, total_steps
+    return env, total_reward, total_steps
 
 
 def main():
@@ -74,7 +74,7 @@ def main():
     #if args.record:
     #    env = wrappers.Monitor(env, args.record)
 
-    reward, steps = run_td3(args) if 'td3' in args.filename else run_other(args)
+    env, reward, steps = run_td3(args) if 'td3' in args.filename else run_other(args)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
     env.close()
