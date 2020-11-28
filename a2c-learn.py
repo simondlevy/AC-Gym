@@ -15,7 +15,6 @@ class A2C:
         self.args = args
         self.device = device
         self.batch = []
-
         self.net_act = net_act
         self.net_crt = net_crt
 
@@ -54,7 +53,6 @@ class A2C:
 
         return net
 
-
 def main():
 
     parser = make_learn_parser()
@@ -75,9 +73,9 @@ def main():
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
-    a2c = A2C(args, device, net_act, net_crt)
+    solver = A2C(args, device, net_act, net_crt)
 
-    loop(args, exp_source, a2c, maxeps, maxsec, test_env, save_path)
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
 
 if __name__ == '__main__':
 

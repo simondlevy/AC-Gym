@@ -1,24 +1,70 @@
 #!/usr/bin/env python3
 import math
-import time
 
 from libs import ptan, model, common, kfac, calc_logprob, make_learn_parser, parse_args, loop
 
 import gym
-import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-def clean_act_net(old):
-    # Correct for different key names in ACKTR
-    new = {}
-    for oldkey in old.keys():
-        newkey = oldkey.replace('.module','').replace('add_bias._', '')
-        new[newkey] = old[oldkey]
-        if 'bias' in newkey:
-            new[newkey] = new[newkey].flatten()
-    return new
+class ACKTR:
+
+    def __init__(self, args, device, net_act, net_crt):
+
+        self.args = args
+        self.device = device
+        self.batch = []
+        self.net_act = net_act
+        self.net_crt = net_crt
+
+        self.opt_act = kfac.KFACOptimizer(net_act, lr=args.lr_actor)
+        self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
+
+    def update(self, exp):
+
+        self.batch.append(exp)
+        if len(self.batch) < self.args.batch_size:
+            return
+
+        states_v, actions_v, vals_ref_v = \
+            common.unpack_batch_a2c(self.batch, self.net_crt, 
+                    last_val_gamma=self.args.gamma ** self.args.reward_steps, device=self.device)
+        self.batch.clear()
+
+        self.opt_crt.zero_grad()
+        value_v = self.net_crt(states_v)
+        loss_value_v = F.mse_loss(value_v.squeeze(-1), vals_ref_v)
+        loss_value_v.backward()
+        self.opt_crt.step()
+
+        mu_v = net_act(states_v)
+        log_prob_v = calc_logprob(mu_v, net_act.logstd, actions_v)
+        if self.opt_act.steps % self.opt_act.Ts == 0:
+            self.opt_act.zero_grad()
+            pg_fisher_loss = -log_prob_v.mean()
+            self.opt_act.acc_stats = True
+            pg_fisher_loss.backward(retain_graph=True)
+            self.opt_act.acc_stats = False
+
+        self.opt_act.zero_grad()
+        adv_v = vals_ref_v.unsqueeze(dim=-1) - value_v.detach()
+        loss_policy_v = -(adv_v * log_prob_v).mean()
+        entropy_loss_v = self.args.entropy_beta * (-(torch.log(2*math.pi*torch.exp(self.net_act.logstd)) + 1)/2).mean()
+        loss_v = loss_policy_v + entropy_loss_v
+        loss_v.backward()
+        self.opt_act.step()
+
+    def clean(old):
+
+        # Correct for different key names in ACKTR
+        new = {}
+        for oldkey in old.keys():
+            newkey = oldkey.replace('.module','').replace('add_bias._', '')
+            new[newkey] = old[oldkey]
+            if 'bias' in newkey:
+                new[newkey] = new[newkey].flatten()
+        return new
 
 if __name__ == '__main__':
 
@@ -41,73 +87,6 @@ if __name__ == '__main__':
     agent = model.AgentA2C(net_act, device=device)
     exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
-    opt_act = kfac.KFACOptimizer(net_act, lr=args.lr_actor)
-    opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
+    solver = ACKTR(args, device, net_act, net_crt)
 
-    batch = []
-    best_reward = None
-    tstart = time.time()
-
-    with ptan.common.utils.RewardTracker() as tracker:
-
-        for step_idx, exp in enumerate(exp_source):
-
-            if len(tracker.total_rewards) >= maxeps:
-                break
-
-            rewards_steps = exp_source.pop_rewards_steps()
-
-            if rewards_steps:
-                rewards, steps = zip(*rewards_steps)
-                tracker.reward(np.mean(rewards), step_idx)
-
-            tcurr = time.time()
-
-            if (tcurr-tstart) >= maxsec:
-                break
-
-            if step_idx % args.test_iters == 0:
-                reward, steps = test_net(net_act, test_env, device=device)
-                print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
-                name = '%+.3f_%d.dat' % (reward, step_idx)
-                fname = save_path + name
-                if best_reward is None or best_reward < reward:
-                    if best_reward is not None:
-                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(clean_act_net(net_act.state_dict()), fname)
-                    best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,fname))
-                    torch.save(clean_act_net(net_act.state_dict()), fname)
-                    break
-
-            batch.append(exp)
-            if len(batch) < args.batch_size:
-                continue
-
-            states_v, actions_v, vals_ref_v = \
-                common.unpack_batch_a2c(batch, net_crt, last_val_gamma=args.gamma ** args.reward_steps, device=device)
-            batch.clear()
-
-            opt_crt.zero_grad()
-            value_v = net_crt(states_v)
-            loss_value_v = F.mse_loss(value_v.squeeze(-1), vals_ref_v)
-            loss_value_v.backward()
-            opt_crt.step()
-
-            mu_v = net_act(states_v)
-            log_prob_v = calc_logprob(mu_v, net_act.logstd, actions_v)
-            if opt_act.steps % opt_act.Ts == 0:
-                opt_act.zero_grad()
-                pg_fisher_loss = -log_prob_v.mean()
-                opt_act.acc_stats = True
-                pg_fisher_loss.backward(retain_graph=True)
-                opt_act.acc_stats = False
-
-            opt_act.zero_grad()
-            adv_v = vals_ref_v.unsqueeze(dim=-1) - value_v.detach()
-            loss_policy_v = -(adv_v * log_prob_v).mean()
-            entropy_loss_v = args.entropy_beta * (-(torch.log(2*math.pi*torch.exp(net_act.logstd)) + 1)/2).mean()
-            loss_v = loss_policy_v + entropy_loss_v
-            loss_v.backward()
-            opt_act.step()
+    loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path)
