@@ -70,6 +70,8 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_p
 
     rewards_steps = None
 
+    evaluations = []
+
     for step_idx, exp in enumerate(exp_source):
 
         rewards_steps = exp_source.pop_rewards_steps()
@@ -86,6 +88,7 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_p
             reward, steps = test_net(solver.net_act, test_env, device=solver.device)
             print('Episode %07d done in %.2f sec, reward %.3f, steps %d' % (step_idx, time() - tcurr, reward, steps))
             model_fname = models_path + ('%+.3f_%d.dat' % (reward, step_idx))
+            evaluations.append((step_idx+1, reward))
             if best_reward is None or best_reward < reward:
                 if best_reward is not None:
                     print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
@@ -98,5 +101,4 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, models_path, runs_p
 
         solver.update(exp, maxeps)
 
-    if rewards_steps is not None:
-        print(rewards_steps)
+    np.save(runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
