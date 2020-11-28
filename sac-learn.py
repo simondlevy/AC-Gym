@@ -44,85 +44,75 @@ if __name__ == '__main__':
 
     with ptan.common.utils.RewardTracker() as tracker:
 
-        with ptan.common.utils.TBMeanTracker(batch_size=10) as tb_tracker:
+        while True:
 
-            while True:
+            if len(tracker.total_rewards) >= maxeps:
+                break
 
-                if len(tracker.total_rewards) >= maxeps:
-                    break
+            step_idx += 1
+            buffer.populate(1)
+            rewards_steps = exp_source.pop_rewards_steps()
+            if rewards_steps:
+                rewards, steps = zip(*rewards_steps)
+                tracker.reward(rewards[0], step_idx)
 
-                step_idx += 1
-                buffer.populate(1)
-                rewards_steps = exp_source.pop_rewards_steps()
-                if rewards_steps:
-                    rewards, steps = zip(*rewards_steps)
-                    tb_tracker.track('episode_steps', steps[0], step_idx)
-                    tracker.reward(rewards[0], step_idx)
+            if len(buffer) < args.replay_initial:
+                continue
 
-                if len(buffer) < args.replay_initial:
-                    continue
+            batch = buffer.sample(args.batch_size)
+            states_v, actions_v, ref_vals_v, ref_q_v = \
+                common.unpack_batch_sac(
+                    batch, tgt_net_crt.target_model,
+                    twinq_net, net_act, args.gamma,
+                    args.entropy_alpha, device)
 
-                batch = buffer.sample(args.batch_size)
-                states_v, actions_v, ref_vals_v, ref_q_v = \
-                    common.unpack_batch_sac(
-                        batch, tgt_net_crt.target_model,
-                        twinq_net, net_act, args.gamma,
-                        args.entropy_alpha, device)
+            # train TwinQ
+            twinq_opt.zero_grad()
+            q1_v, q2_v = twinq_net(states_v, actions_v)
+            q1_loss_v = F.mse_loss(q1_v.squeeze(),
+                                   ref_q_v.detach())
+            q2_loss_v = F.mse_loss(q2_v.squeeze(),
+                                   ref_q_v.detach())
+            q_loss_v = q1_loss_v + q2_loss_v
+            q_loss_v.backward()
+            twinq_opt.step()
 
-                tb_tracker.track('ref_v', ref_vals_v.mean(), step_idx)
-                tb_tracker.track('ref_q', ref_q_v.mean(), step_idx)
+            # Critic
+            crt_opt.zero_grad()
+            val_v = net_crt(states_v)
+            v_loss_v = F.mse_loss(val_v.squeeze(),
+                                  ref_vals_v.detach())
+            v_loss_v.backward()
+            crt_opt.step()
 
-                # train TwinQ
-                twinq_opt.zero_grad()
-                q1_v, q2_v = twinq_net(states_v, actions_v)
-                q1_loss_v = F.mse_loss(q1_v.squeeze(),
-                                       ref_q_v.detach())
-                q2_loss_v = F.mse_loss(q2_v.squeeze(),
-                                       ref_q_v.detach())
-                q_loss_v = q1_loss_v + q2_loss_v
-                q_loss_v.backward()
-                twinq_opt.step()
-                tb_tracker.track('loss_q1', q1_loss_v, step_idx)
-                tb_tracker.track('loss_q2', q2_loss_v, step_idx)
+            # Actor
+            act_opt.zero_grad()
+            acts_v = net_act(states_v)
+            q_out_v, _ = twinq_net(states_v, acts_v)
+            act_loss = -q_out_v.mean()
+            act_loss.backward()
+            act_opt.step()
 
-                # Critic
-                crt_opt.zero_grad()
-                val_v = net_crt(states_v)
-                v_loss_v = F.mse_loss(val_v.squeeze(),
-                                      ref_vals_v.detach())
-                v_loss_v.backward()
-                crt_opt.step()
-                tb_tracker.track('loss_v', v_loss_v, step_idx)
+            tgt_net_crt.alpha_sync(alpha=1 - 1e-3)
 
-                # Actor
-                act_opt.zero_grad()
-                acts_v = net_act(states_v)
-                q_out_v, _ = twinq_net(states_v, acts_v)
-                act_loss = -q_out_v.mean()
-                act_loss.backward()
-                act_opt.step()
-                tb_tracker.track('loss_act', act_loss, step_idx)
+            tcurr = time.time()
 
-                tgt_net_crt.alpha_sync(alpha=1 - 1e-3)
+            if (tcurr-tstart) >= maxsec:
+                break
 
-                tcurr = time.time()
-
-                if (tcurr-tstart) >= maxsec:
-                    break
-
-                if step_idx % args.test_iters == 0:
-                    reward, steps = test_net(net_act, test_env, device=device)
-                    print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
-                    name = '%+.3f_%d.dat' % (reward, step_idx)
-                    fname = save_path + name
-                    if best_reward is None or best_reward < reward:
-                        if best_reward is not None:
-                            print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                            torch.save(net_act.state_dict(), fname)
-                        best_reward = reward
-                    if args.target is not None and reward >= args.target:
-                        print('Target %f achieved; saving %s' % (args.target,fname))
+            if step_idx % args.test_iters == 0:
+                reward, steps = test_net(net_act, test_env, device=device)
+                print('Test done in %.2f sec, reward %.3f, steps %d' % (time.time() - tcurr, reward, steps))
+                name = '%+.3f_%d.dat' % (reward, step_idx)
+                fname = save_path + name
+                if best_reward is None or best_reward < reward:
+                    if best_reward is not None:
+                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
                         torch.save(net_act.state_dict(), fname)
-                        break
+                    best_reward = reward
+                if args.target is not None and reward >= args.target:
+                    print('Target %f achieved; saving %s' % (args.target,fname))
+                    torch.save(net_act.state_dict(), fname)
+                    break
 
-    pass
+pass
