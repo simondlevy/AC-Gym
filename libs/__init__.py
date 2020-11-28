@@ -9,15 +9,16 @@ import os
 
 class Solver:
 
-    def __init__(self, args, device, net_act, net_crt):
+    def __init__(self, nhid, name, env, device):
 
-        self.args = args
         self.device = device
-        self.batch = []
-        self.net_act = net_act
-        self.net_crt = net_crt
 
-    def loop(self, args, exp_source, maxeps, maxsec, test_env, models_path, runs_path):
+        self.net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid).to(device)
+        self.net_crt = model.ModelCritic(env.observation_space.shape[0], nhid).to(device)
+
+        self.batch = []
+
+    def loop(self, test_iters, target, maxeps, maxsec, test_env, models_path, runs_path):
 
         best_reward = None
         tstart = time()
@@ -26,9 +27,9 @@ class Solver:
 
         evaluations = []
 
-        for step_idx, exp in enumerate(exp_source):
+        for step_idx, exp in enumerate(self.exp_source):
 
-            rewards_steps = exp_source.pop_rewards_steps()
+            rewards_steps = self.exp_source.pop_rewards_steps()
 
             tcurr = time()
 
@@ -38,7 +39,7 @@ class Solver:
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
 
-            if step_idx % args.test_iters == 0:
+            if step_idx % test_iters == 0:
                 reward, steps = test_net(self.net_act, test_env, device=self.device)
                 print('Episode %07d done in %.2f sec, reward %.3f, steps %d' % (step_idx, time() - tcurr, reward, steps))
                 model_fname = models_path + ('%+.3f_%d.dat' % (reward, step_idx))
@@ -48,8 +49,8 @@ class Solver:
                         print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
                         torch.save(self._clean(self.net_act.state_dict()), model_fname)
                     best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,model_fname))
+                if target is not None and reward >= target:
+                    print('Target %f achieved; saving %s' % (target,model_fname))
                     torch.save(self._clean(self.net_act.state_dict()), model_fname)
                     break
 
@@ -61,10 +62,6 @@ class Solver:
 
         return net
 
-def make_nets(args, env, device):
-    net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid).to(device)
-    net_crt = model.ModelCritic(env.observation_space.shape[0], args.nhid).to(device)
-    return net_act, net_crt
 
 def make_learn_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
