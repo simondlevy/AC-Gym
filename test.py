@@ -31,7 +31,6 @@ def run_other(env, args):
 
     d = pickle.load(open(args.filename, 'rb'))
 
-    #net.load_state_dict(torch.load(args.filename))
     net.load_state_dict(d)
 
     obs = env.reset()

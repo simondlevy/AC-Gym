@@ -65,9 +65,7 @@ class Solver:
 
     def _save(self, model_fname):
 
-        pickle.dump(self._clean(self.net_act.state_dict()), open(model_fname+'.pkl', 'wb'))
-
-        torch.save(self._clean(self.net_act.state_dict()), model_fname)
+        pickle.dump(self._clean(self.net_act.state_dict()), open(model_fname, 'wb'))
 
     def _clean(self, net):
 
