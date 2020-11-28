@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, calc_logprob, make_learn_parser, parse_args
+from libs import Solver, ptan, model, calc_logprob, make_learn_parser
 
 import torch
 import torch.optim as optim
@@ -10,9 +10,9 @@ import torch.nn.functional as F
 class PPO(Solver):
 
     def __init__(self,
-            nhid,
             env_name, 
-            device, 
+            nhid,
+            cuda, 
             gamma, 
             lr_actor, 
             lr_critic, 
@@ -21,9 +21,9 @@ class PPO(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, env, device, gamma, lr_critic)
+        Solver.__init__(self, env_name, 'ppo', nhid, cuda, gamma, lr_critic)
 
-        agent = model.AgentA2C(self.net_act, device=device)
+        agent = model.AgentA2C(self.net_act, device=self.device)
 
         self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
@@ -150,19 +150,19 @@ def main():
     parser.add_argument('--epochs', default=10, type=int, help='Epochs')
     parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
 
-    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'ppo')
+    args = parser.parse_args()
 
     solver = PPO(
-            args.nhid,
             args.env,
-            device,
+            args.nhid,
+            args.cuda,
             args.gamma,
             args.lr_actor,
             args.lr_critic,
             args.batch_size,
             args.traj_size)
 
-    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, args.maxeps, args.maxhrs)
 
 if __name__ == '__main__':
     main()
