@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!usr/bin/env python3
 import gym
 
 from libs import ptan, model, calc_logprob, make_learn_parser, parse_args, make_nets, loop
@@ -22,7 +22,7 @@ class PPO:
 
         self.trajectory = []
 
-    def update(self, exp):
+    def update(self, exp, maxeps):
 
         self.trajectory.append(exp)
         if len(self.trajectory) < self.args.traj_size:

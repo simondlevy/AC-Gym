@@ -99,4 +99,4 @@ def loop(args, exp_source, solver, maxeps, maxsec, test_env, save_path):
                     torch.save(solver.clean(solver.net_act.state_dict()), fname)
                     break
 
-            solver.update(exp)
+            solver.update(exp, maxeps)

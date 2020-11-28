@@ -21,7 +21,7 @@ class ACKTR:
         self.opt_act = kfac.KFACOptimizer(net_act, lr=args.lr_actor)
         self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
 
-    def update(self, exp):
+    def update(self, exp, maxeps):
 
         self.batch.append(exp)
         if len(self.batch) < self.args.batch_size:

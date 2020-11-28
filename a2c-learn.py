@@ -21,7 +21,7 @@ class A2C:
         self.opt_act = optim.Adam(net_act.parameters(), lr=args.lr_actor)
         self.opt_crt = optim.Adam(net_crt.parameters(), lr=args.lr_critic)
 
-    def update(self, exp):
+    def update(self, exp, maxeps):
 
         self.batch.append(exp)
 
