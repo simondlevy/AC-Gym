@@ -1,4 +1,3 @@
-import pickle
 import copy
 import numpy as np
 import torch
@@ -161,32 +160,20 @@ class TD3:
                 target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
 
-    def save(self, filename):
+    def get(self):
 
-        pickle.dump(
-                (
-                    self.critic.state_dict(),
-                    self.critic_optimizer.state_dict(),
-                    self.actor.state_dict(),
-                    self.actor_optimizer.state_dict()),
-                open(filename+'.dat', 'wb'))
+        return (self.critic.state_dict(), self.critic_optimizer.state_dict(), self.actor.state_dict(), self.actor_optimizer.state_dict())
 
-    def load(self, filename):
+    def set(self, parts):
 
-        (
-                critic_state_dict,
-                critic_optimizer_state_dict,
-                actor_state_dict,
-                actor_optimizer_state_dict) = pickle.load(open(filename, 'rb'))
-
-        self.critic.load_state_dict(critic_state_dict)
-        self.critic_optimizer.load_state_dict(critic_optimizer_state_dict)
-        self.actor.load_state_dict(actor_state_dict)
-        self.actor_optimizer.load_state_dict(actor_optimizer_state_dict)
+        self.critic.load_state_dict(parts[0])
+        self.critic_optimizer.load_state_dict(parts[1])
+        self.actor.load_state_dict(parts[2])
+        self.actor_optimizer.load_state_dict(parts[3])
 
         self.critic_target = copy.deepcopy(self.critic)
         self.actor_target = copy.deepcopy(self.actor)
-        
+
 # Runs policy for X episodes and returns average reward
 # A fixed seed is used for the eval environment
 def eval_policy(policy, env, seed=None, eval_episodes=10, render=False):
@@ -240,9 +227,9 @@ class ReplayBuffer:
         ind = np.random.randint(0, self.size, size=batch_size)
 
         return (
-            torch.FloatTensor(self.state[ind]).to(self.device),
-            torch.FloatTensor(self.action[ind]).to(self.device),
-            torch.FloatTensor(self.next_state[ind]).to(self.device),
-            torch.FloatTensor(self.reward[ind]).to(self.device),
-            torch.FloatTensor(self.not_done[ind]).to(self.device)
-        )
+                torch.FloatTensor(self.state[ind]).to(self.device),
+                torch.FloatTensor(self.action[ind]).to(self.device),
+                torch.FloatTensor(self.next_state[ind]).to(self.device),
+                torch.FloatTensor(self.reward[ind]).to(self.device),
+                torch.FloatTensor(self.not_done[ind]).to(self.device)
+                )

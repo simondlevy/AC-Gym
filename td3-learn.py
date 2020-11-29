@@ -4,6 +4,7 @@ import torch
 import gym
 import argparse
 import os
+import pickle
 
 from libs.td3 import TD3, ReplayBuffer, eval_policy
 
@@ -30,7 +31,6 @@ def main():
     parser.add_argument('--policy_noise', default=0.2,              help='Noise added to target policy during critic update')
     parser.add_argument('--noise_clip', default=0.5,                help='Range to clip target policy noise')
     parser.add_argument('--policy_freq', default=2, type=int,       help='Frequency of delayed policy updates')
-    parser.add_argument('--load_model',                             help='Model load file name')
     parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     args = parser.parse_args()
 
@@ -62,9 +62,6 @@ def main():
 		policy_noise=args.policy_noise * max_action,
 		noise_clip=args.noise_clip * max_action,
 		policy_freq=args.policy_freq)
-
-    if args.load_model is not None: 
-        policy.load(args.load_model)
 
     replay_buffer = ReplayBuffer(state_dim, action_dim)
 
@@ -122,7 +119,7 @@ def main():
             avg_reward = eval_policy_learn(policy, env, args.seed)
             filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
-            policy.save('./models/' + filename)
+            pickle.dump((policy.get(), args.env, args.nhid) , open('./models/'+filename, 'wb'))
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break

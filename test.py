@@ -12,28 +12,26 @@ from libs.td3 import TD3, eval_policy
 import numpy as np
 import torch
 
-def run_td3(env, args):
+def run_td3(parts, env, nhid, record):
+
+    exit(0)
 
     # Target policy smoothing is scaled wrt the action scale
-    policy = TD3(
-            env.observation_space.shape[0],
-            env.action_space.shape[0],
-            float(env.action_space.high[0]),
-            args.nhid)
+    #policy = TD3(
+    #        env.observation_space.shape[0],
+    #        env.action_space.shape[0],
+    #        float(env.action_space.high[0]),
+    #        args.nhid)
 
-    policy.load(args.filename)
+    #policy.load(args.filename)
 
-    return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
+    #return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
 
-def run_other(args):
-
-    d,env_name,nhid = pickle.load(open(args.filename, 'rb'))
-
-    env = gym.make(env_name)
+def run_other(parts, env, nhid, record):
 
     net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid)
 
-    net.load_state_dict(d)
+    net.load_state_dict(parts)
 
     obs = env.reset()
 
@@ -47,7 +45,7 @@ def run_other(args):
         if np.isscalar(action): 
             action = [action]
         obs, reward, done, _ = env.step(action)
-        if args.record is None:
+        if record is None:
             env.render()
             time.sleep(.02)
         total_reward += reward
@@ -74,9 +72,16 @@ def main():
     #if args.record:
     #    env = wrappers.Monitor(env, args.record)
 
-    env, reward, steps = run_td3(args) if 'td3' in args.filename else run_other(args)
+    parts, env_name, nhid = pickle.load(open(args.filename, 'rb'))
+
+    env = gym.make(env_name)
+
+    fun = run_td3 if 'td3' in args.filename else run_other
+
+    env, reward, steps = fun(parts, env, nhid, args.record)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
+
     env.close()
 
 if __name__ == '__main__':

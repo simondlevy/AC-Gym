@@ -68,11 +68,11 @@ class SAC(Solver):
         self.twinq_opt.step()
 
         # Critic
-        self.crt_opt.zero_grad()
+        self.opt_crt.zero_grad()
         val_v = self.net_crt(states_v)
         v_loss_v = F.mse_loss(val_v.squeeze(), ref_vals_v.detach())
         v_loss_v.backward()
-        self.crt_opt.step()
+        self.opt_crt.step()
 
         # Actor
         self.act_opt.zero_grad()
