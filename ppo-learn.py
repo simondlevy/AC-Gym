@@ -162,7 +162,7 @@ def main():
             args.batch_size,
             args.traj_size)
 
-    solver.loop(args.test_iters, args.target, args.maxeps, args.maxhrs)
+    solver.loop(args.test_iters, args.target, args.maxeps)
 
 if __name__ == '__main__':
     main()

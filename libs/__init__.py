@@ -31,10 +31,9 @@ class Solver:
 
         self.gamma = gamma
 
-    def loop(self, test_iters, target, maxeps, maxhrs):
+    def loop(self, test_iters, target, maxeps):
 
         maxeps = np.inf if maxeps is None else maxeps
-        maxsec = np.inf if maxhrs is None else (maxhrs * 3600)
 
         best_reward = None
         tstart = time()
@@ -49,7 +48,7 @@ class Solver:
 
             tcurr = time()
 
-            if (tcurr-tstart) >= maxsec or episode_idx == maxeps:
+            if episode_idx == maxeps:
                 break
             
             if rewards_steps:
@@ -95,7 +94,6 @@ def make_learn_parser():
 
     parser.add_argument('--cuda', default=False, action='store_true', help='Enable CUDA')
     parser.add_argument('--datafile', required=False, help='Name of data file to load')
-    parser.add_argument('--maxhrs', default=None, type=float, help='Maximum run-time in hours')
     parser.add_argument('--test-iters', default=100, type=float, help='How often to test and save best')
     return parser
 
