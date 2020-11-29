@@ -100,7 +100,7 @@ def main():
         if done: 
 
             # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
-            print('Episode %07d reward = %.3f, steps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
+            print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
 
             # Reset environment
             state, done = env.reset(), False
