@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import time
-import pickle
 
 import gym
 from gym import wrappers
@@ -61,7 +60,7 @@ def main():
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
-    parts, env_name, nhid = pickle.load(open(args.filename, 'rb'))
+    parts, env_name, nhid = torch.load(open(args.filename, 'rb'))
 
     env = gym.make(env_name)
 

@@ -6,7 +6,6 @@ import torch
 import argparse
 import os
 import torch.optim as optim
-import pickle
 
 class Solver:
 
@@ -79,7 +78,7 @@ class Solver:
 
         d = self._clean(self.net_act.state_dict())
 
-        pickle.dump((d,self.env_name,self.nhid), open(model_fname, 'wb'))
+        torch.save((d,self.env_name,self.nhid), open(model_fname, 'wb'))
 
     def _clean(self, net):
 
