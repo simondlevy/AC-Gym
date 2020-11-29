@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import time
+import pickle
 
 import gym
 from gym import wrappers
@@ -11,24 +12,23 @@ from libs.td3 import TD3, eval_policy
 import numpy as np
 import torch
 
-def run_td3(env, args):
+def run_td3(parts, env, nhid, record):
 
-    # Target policy smoothing is scaled wrt the action scale
     policy = TD3(
             env.observation_space.shape[0],
             env.action_space.shape[0],
             float(env.action_space.high[0]),
-            args.nhid)
+            nhid)
 
-    policy.load(args.filename)
+    policy.set(parts)
 
-    return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
+    return eval_policy(policy, env, seed=None, render=(not record), eval_episodes=1)
 
-def run_other(env, args):
+def run_other(parts, env, nhid, record):
 
-    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid)
+    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid)
 
-    net.load_state_dict(torch.load(args.filename))
+    net.load_state_dict(parts)
 
     obs = env.reset()
 
@@ -42,8 +42,8 @@ def run_other(env, args):
         if np.isscalar(action): 
             action = [action]
         obs, reward, done, _ = env.step(action)
-        if args.record is None:
-            env.render()
+        if record is None:
+            env.render('rgb_array')
             time.sleep(.02)
         total_reward += reward
         total_steps += 1
@@ -57,13 +57,13 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', metavar='FILENAME', help='input file')
-    parser.add_argument('--env', default='Pendulum-v0', help='Environment name to use')
-    parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
-    env = gym.make(args.env)
+    parts, env_name, nhid = pickle.load(open(args.filename, 'rb'))
+
+    env = gym.make(env_name)
 
     if args.seed is not None:
         env.seed(args.seed)
@@ -71,11 +71,14 @@ def main():
         np.random.seed(args.seed)
 
     if args.record:
-        env = wrappers.Monitor(env, args.record)
+        env = wrappers.Monitor(env, args.record, force=True)
 
-    reward, steps = run_td3(env, args) if 'td3' in args.filename else run_other(env, args)
+    fun = run_td3 if 'td3' in args.filename else run_other
+
+    reward, steps = fun(parts, env, nhid, args.record)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
+
     env.close()
 
 if __name__ == '__main__':

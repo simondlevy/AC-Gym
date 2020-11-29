@@ -3,21 +3,39 @@ import gym
 from libs import ptan, model
 import numpy as np
 import torch
-import math
 import argparse
 import os
+import torch.optim as optim
+import pickle
 
 class Solver:
 
-    def __init__(self, args, device, net_act, net_crt):
+    def __init__(self, env_name, algo_name, nhid, cuda, gamma, lr_critic):
 
-        self.args = args
-        self.device = device
+        self.env = gym.make(env_name)
+
+        os.makedirs('./models/', exist_ok=True)
+        self.models_path = './models/' + algo_name + '-' + env_name
+        os.makedirs('./runs/', exist_ok=True)
+        self.runs_path = './runs/' + algo_name + '-' + env_name
+
+        self.device = torch.device('cuda' if cuda else 'cpu')
+        self.env_name = env_name
+        self.nhid = nhid
+
+        self.net_act = model.ModelActor(self.env.observation_space.shape[0], self.env.action_space.shape[0], nhid).to(self.device)
+        self.net_crt = model.ModelCritic(self.env.observation_space.shape[0], nhid).to(self.device)
+
+        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
+
         self.batch = []
-        self.net_act = net_act
-        self.net_crt = net_crt
 
-    def loop(self, args, exp_source, maxeps, maxsec, test_env, models_path, runs_path):
+        self.gamma = gamma
+
+    def loop(self, test_iters, target, maxeps, maxhrs):
+
+        maxeps = np.inf if maxeps is None else maxeps
+        maxsec = np.inf if maxhrs is None else (maxhrs * 3600)
 
         best_reward = None
         tstart = time()
@@ -26,9 +44,9 @@ class Solver:
 
         evaluations = []
 
-        for step_idx, exp in enumerate(exp_source):
+        for step_idx, exp in enumerate(self.exp_source):
 
-            rewards_steps = exp_source.pop_rewards_steps()
+            rewards_steps = self.exp_source.pop_rewards_steps()
 
             tcurr = time()
 
@@ -38,33 +56,35 @@ class Solver:
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
 
-            if step_idx % args.test_iters == 0:
-                reward, steps = test_net(self.net_act, test_env, device=self.device)
+            if step_idx % test_iters == 0:
+                reward, steps = test_net(self.net_act, self.env, device=self.device)
                 print('Episode %07d done in %.2f sec, reward %.3f, steps %d' % (step_idx, time() - tcurr, reward, steps))
-                model_fname = models_path + ('%+.3f_%d.dat' % (reward, step_idx))
+                model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, step_idx))
                 evaluations.append((step_idx+1, reward))
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
                         print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
-                        torch.save(self._clean(self.net_act.state_dict()), model_fname)
+                        self._save(model_fname)
                     best_reward = reward
-                if args.target is not None and reward >= args.target:
-                    print('Target %f achieved; saving %s' % (args.target,model_fname))
-                    torch.save(self._clean(self.net_act.state_dict()), model_fname)
+                if target is not None and reward >= target:
+                    print('Target %f achieved; saving %s' % (target,model_fname))
+                    self._save(model_fname)
                     break
 
             self.update(exp, maxeps)
 
-        np.save(runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
+        np.save(self.runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
+
+    def _save(self, model_fname):
+
+        d = self._clean(self.net_act.state_dict())
+
+        pickle.dump((d,self.env_name,self.nhid), open(model_fname, 'wb'))
 
     def _clean(self, net):
 
         return net
 
-def make_nets(args, env, device):
-    net_act = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], args.nhid).to(device)
-    net_crt = model.ModelCritic(env.observation_space.shape[0], args.nhid).to(device)
-    return net_act, net_crt
 
 def make_learn_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -78,18 +98,6 @@ def make_learn_parser():
     parser.add_argument('--maxhrs', default=None, type=float, help='Maximum run-time in hours')
     parser.add_argument('--test-iters', default=100, type=float, help='How often to test and save best')
     return parser
-
-def parse_args(parser, algo):
-    args = parser.parse_args()
-    device = torch.device('cuda' if args.cuda else 'cpu')
-    os.makedirs('./models/', exist_ok=True)
-    models_path = './models/' + algo + '-' + args.env
-    os.makedirs('./runs/', exist_ok=True)
-    runs_path = './runs/' + algo + '-' + args.env
-    test_env = gym.make(args.env)
-    maxeps = np.inf if args.maxeps is None else args.maxeps
-    maxsec = np.inf if args.maxhrs is None else (args.maxhrs * 3600)
-    return args, device, models_path, runs_path, test_env, maxeps, maxsec
 
 def test_net(net, env, count=10, device='cpu'):
     rewards = 0.0
@@ -112,7 +120,7 @@ def test_net(net, env, count=10, device='cpu'):
 
 def calc_logprob(mu_v, logstd_v, actions_v):
     p1 = - ((mu_v - actions_v) ** 2) / (2*torch.exp(logstd_v).clamp(min=1e-3))
-    p2 = - torch.log(torch.sqrt(2 * math.pi * torch.exp(logstd_v)))
+    p2 = - torch.log(torch.sqrt(2 * np.pi * torch.exp(logstd_v)))
     return p1 + p2
 
 
