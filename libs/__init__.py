@@ -43,26 +43,26 @@ class Solver:
 
         evaluations = []
 
-        for step_idx, exp in enumerate(self.exp_source):
+        for episode_idx, exp in enumerate(self.exp_source):
 
             rewards_steps = self.exp_source.pop_rewards_steps()
 
             tcurr = time()
 
-            if (tcurr-tstart) >= maxsec or step_idx == maxeps:
+            if (tcurr-tstart) >= maxsec or episode_idx == maxeps:
                 break
             
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
 
-            if step_idx % test_iters == 0:
+            if episode_idx % test_iters == 0:
                 reward, steps = test_net(self.net_act, self.env, device=self.device)
-                print('Episode %07d reward %.3f, steps %d' % (step_idx, reward, steps))
-                model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, step_idx))
-                evaluations.append((step_idx+1, reward))
+                print('Episode %07d reward %.3f, steps %d' % (episode_idx, reward, steps))
+                model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, episode_idx))
+                evaluations.append((episode_idx+1, reward))
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
-                        print('Best reward updated: %.3f -> %.3f' % (best_reward, reward))
+                        print('\n* Best reward updated: %.3f -> %.3f *\n' % (best_reward, reward))
                         self._save(model_fname)
                     best_reward = reward
                 if target is not None and reward >= target:

@@ -104,8 +104,8 @@ def main():
 
         if done: 
             # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
-            print('Total T: %5d Episode Num: %5d Episode T: %3d Reward: %+6.3f' % 
-                    (t+1, episode_num+1, episode_timesteps, episode_reward))
+            print('Episode Num: %5d Episode T: %3d Reward: %+6.3f' % 
+                    (episode_num+1, episode_timesteps, episode_reward))
             # Reset environment
             state, done = env.reset(), False
             episode_reward = 0
