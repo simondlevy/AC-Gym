@@ -119,7 +119,7 @@ def main():
             avg_reward = eval_policy_learn(policy, env, args.seed)
             filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
-            pickle.dump((policy.get(), args.env, args.nhid) , open('./models/'+filename, 'wb'))
+            pickle.dump((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break

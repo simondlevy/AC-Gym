@@ -14,18 +14,15 @@ import torch
 
 def run_td3(parts, env, nhid, record):
 
-    exit(0)
+    policy = TD3(
+            env.observation_space.shape[0],
+            env.action_space.shape[0],
+            float(env.action_space.high[0]),
+            nhid)
 
-    # Target policy smoothing is scaled wrt the action scale
-    #policy = TD3(
-    #        env.observation_space.shape[0],
-    #        env.action_space.shape[0],
-    #        float(env.action_space.high[0]),
-    #        args.nhid)
+    policy.set(parts)
 
-    #policy.load(args.filename)
-
-    #return eval_policy(policy, env, seed=None, render=(args.record is None), eval_episodes=1)
+    return eval_policy(policy, env, seed=None, render=record, eval_episodes=1)
 
 def run_other(parts, env, nhid, record):
 
@@ -53,7 +50,7 @@ def run_other(parts, env, nhid, record):
         if done:
             break
 
-    return env, total_reward, total_steps
+    return total_reward, total_steps
 
 
 def main():
@@ -78,7 +75,7 @@ def main():
 
     fun = run_td3 if 'td3' in args.filename else run_other
 
-    env, reward, steps = fun(parts, env, nhid, args.record)
+    reward, steps = fun(parts, env, nhid, args.record)
 
     print('In %d steps we got %.3f reward' % (steps, reward))
 
