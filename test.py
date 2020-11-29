@@ -22,7 +22,7 @@ def run_td3(parts, env, nhid, record):
 
     policy.set(parts)
 
-    return eval_policy(policy, env, seed=None, render=record, eval_episodes=1)
+    return eval_policy(policy, env, seed=None, render=(not record), eval_episodes=1)
 
 def run_other(parts, env, nhid, record):
 
