@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, common, make_learn_parser, parse_args
+from libs import Solver, ptan, model, common, make_learn_parser
 
 import torch.optim as optim
 import torch.nn.functional as F
@@ -9,9 +9,9 @@ import torch.nn.functional as F
 class SAC(Solver):
 
     def __init__(self,
-            nhid,
             env_name, 
-            device, 
+            nhid,
+            cuda, 
             gamma, 
             lr_actor, 
             lr_values,
@@ -22,13 +22,13 @@ class SAC(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, env, device, gamma, lr_values)
+        Solver.__init__(self, env_name, 'sac', nhid, cuda, gamma, lr_values)
 
-        agent = model.AgentDDPG(self.net_act, device=device)
+        agent = model.AgentDDPG(self.net_act, device=self.device)
 
         self.exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=gamma, steps_count=1)
 
-        self.twinq_net = model.ModelSACTwinQ(env.observation_space.shape[0], env.action_space.shape[0]).to(device)
+        self.twinq_net = model.ModelSACTwinQ(env.observation_space.shape[0], env.action_space.shape[0]).to(self.device)
 
         self.tgt_net_crt = ptan.agent.TargetNet(self.net_crt)
 
@@ -99,12 +99,12 @@ def main():
     parser.add_argument('--replay-initial', default=10000, type=int, help='Initial replay size')
     parser.add_argument('--entropy-alpha', default=0.1, type=float, help='Entropy alpha')
 
-    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'sac')
+    args = parser.parse_args()
 
     solver = SAC(
-            args.nhid,
             args.env, 
-            device, 
+            args.nhid,
+            args.cuda, 
             args.gamma, 
             args.lr_actor, 
             args.lr_values, 
@@ -113,7 +113,7 @@ def main():
             args.replay_initial,
             args.entropy_alpha)
 
-    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, args.maxeps, args.maxhrs)
 
 if __name__ == '__main__':
     main()
