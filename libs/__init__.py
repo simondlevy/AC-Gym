@@ -57,7 +57,7 @@ class Solver:
 
             if episode_idx % test_iters == 0:
                 reward, steps = test_net(self.net_act, self.env, device=self.device)
-                print('Episode %07d reward %.3f, steps %d' % (episode_idx, reward, steps))
+                print('Episode %07d reward = %.3f, steps = %d' % (episode_idx, reward, steps))
                 model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, episode_idx))
                 evaluations.append((episode_idx+1, reward))
                 if best_reward is None or best_reward < reward:

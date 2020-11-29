@@ -4,7 +4,6 @@ import torch
 import gym
 import argparse
 import os
-import pickle
 
 from libs.td3 import TD3, ReplayBuffer, eval_policy
 
@@ -33,10 +32,6 @@ def main():
     parser.add_argument('--policy_freq', default=2, type=int,       help='Frequency of delayed policy updates')
     parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     args = parser.parse_args()
-
-    print('---------------------------------------')
-    print('Env: %s, Seed: %d' % (args.env, args.seed))
-    print('---------------------------------------')
 
     os.makedirs('./runs', exist_ok=True)
     os.makedirs('./models', exist_ok=True)
@@ -73,7 +68,7 @@ def main():
     state, done = env.reset(), False
     episode_reward = 0
     episode_timesteps = 0
-    episode_num = 0
+    episode_idx = 0
 
     for t in range(int(args.max_timesteps)):
         
@@ -103,14 +98,15 @@ def main():
             policy.train(replay_buffer, args.batch_size)
 
         if done: 
+
             # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
-            print('Episode Num: %5d Episode T: %3d Reward: %+6.3f' % 
-                    (episode_num+1, episode_timesteps, episode_reward))
+            print('Episode %07d reward = %.3f, steps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
+
             # Reset environment
             state, done = env.reset(), False
             episode_reward = 0
             episode_timesteps = 0
-            episode_num += 1 
+            episode_idx += 1 
 
         evaluations.append((t+1,episode_reward))
 
@@ -119,7 +115,7 @@ def main():
             avg_reward = eval_policy_learn(policy, env, args.seed)
             filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
-            pickle.dump((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
+            torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
