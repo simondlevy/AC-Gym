@@ -19,18 +19,19 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env', default='Pendulum-v0',             help='OpenAI gym environment name')
     parser.add_argument('--nhid', default='64',type=int,            help='Number of hidden units')
+    parser.add_argument('--maxeps', default=None, type=int, help='Maximum number of episodes')
+    parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
+    parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
+
     parser.add_argument('--seed', default=0, type=int,              help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument('--start_timesteps', default=25e3, type=int,help='Time steps initial random policy is used')
     parser.add_argument('--eval_freq', default=5e3, type=int,       help='How often (time steps, we evaluate')
-    parser.add_argument('--max_timesteps', default=1e6, type=int,   help='Max time steps to run environment')
     parser.add_argument('--expl_noise', default=0.1,                help='Std of Gaussian exploration noise')
     parser.add_argument('--batch_size', default=256, type=int,      help='Batch size for both actor and critic')
-    parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
     parser.add_argument('--tau', default=0.005,                     help='Target network update rate')
     parser.add_argument('--policy_noise', default=0.2,              help='Noise added to target policy during critic update')
     parser.add_argument('--noise_clip', default=0.5,                help='Range to clip target policy noise')
     parser.add_argument('--policy_freq', default=2, type=int,       help='Frequency of delayed policy updates')
-    parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     args = parser.parse_args()
 
     os.makedirs('./runs', exist_ok=True)
@@ -69,8 +70,9 @@ def main():
     episode_reward = 0
     episode_timesteps = 0
     episode_idx = 0
+    t = 0
 
-    for t in range(int(args.max_timesteps)):
+    while episode_idx < args.maxeps:
         
         episode_timesteps += 1
 
@@ -119,6 +121,8 @@ def main():
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
+
+        t += 1
 
 if __name__ == '__main__':
     main()
