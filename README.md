@@ -25,7 +25,7 @@ running
 
 where ```<REWARD>``` is the reward value.
 
-If you have installed [matplotlib](https://matplotlib.org/), you can visualize the episode reward over time by runnin
+If you have installed [matplotlib](https://matplotlib.org/), you can visualize the episode reward over time by running
 
 ```python3 plot.py models/td3-Pendulum-v0-<REWARD>.dat```
 
