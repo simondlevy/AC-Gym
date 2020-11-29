@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser, parse_args
+from libs import Solver, ptan, model, trpo, calc_logprob, make_learn_parser
 
 import torch
 import torch.nn.functional as F
@@ -9,9 +9,9 @@ import torch.nn.functional as F
 class TRPO(Solver):
 
     def __init__(self,
-            nhid,
             env_name, 
-            device, 
+            nhid,
+            cuda, 
             gamma, 
             lr, 
             maxkl,
@@ -21,9 +21,9 @@ class TRPO(Solver):
 
         env = gym.make(env_name)
 
-        Solver.__init__(self, nhid, env, device, gamma, lr)
+        Solver.__init__(self, env_name, 'trpo', nhid, cuda, gamma, lr)
 
-        agent = model.AgentA2C(self.net_act, device=device)
+        agent = model.AgentA2C(self.net_act, device=self.device)
 
         self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
@@ -131,12 +131,12 @@ def main():
     parser.add_argument('--gae-lambda', default=0.95, type=float, help='Lambda for Generalized Advantage Estimation')
     parser.add_argument('--traj-size', default=2049, type=int, help='Trajectory size')
 
-    args, device, models_path, runs_path, test_env, maxeps, maxsec = parse_args(parser, 'trpo')
+    args = parser.parse_args()
 
     solver = TRPO(
-            args.nhid,
             args.env, 
-            device, 
+            args.nhid,
+            args.cuda, 
             args.gamma, 
             args.lr, 
             args.maxkl,
@@ -144,7 +144,7 @@ def main():
             args.gae_lambda,
             args.traj_size)
 
-    solver.loop(args.test_iters, args.target, maxeps, maxsec, test_env, models_path, runs_path)
+    solver.loop(args.test_iters, args.target, args.maxeps, args.maxhrs)
 
 if __name__ == '__main__':
     main()
