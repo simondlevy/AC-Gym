@@ -43,7 +43,7 @@ def run_other(parts, env, nhid, record):
             action = [action]
         obs, reward, done, _ = env.step(action)
         if record is None:
-            env.render()
+            env.render('rgb_array')
             time.sleep(.02)
         total_reward += reward
         total_steps += 1
@@ -61,17 +61,17 @@ def main():
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
-    #if args.seed is not None:
-    #    env.seed(args.seed)
-    #    torch.manual_seed(args.seed)
-    #    np.random.seed(args.seed)
-
-    #if args.record:
-    #    env = wrappers.Monitor(env, args.record)
-
     parts, env_name, nhid = pickle.load(open(args.filename, 'rb'))
 
     env = gym.make(env_name)
+
+    if args.seed is not None:
+        env.seed(args.seed)
+        torch.manual_seed(args.seed)
+        np.random.seed(args.seed)
+
+    if args.record:
+        env = wrappers.Monitor(env, args.record, force=True)
 
     fun = run_td3 if 'td3' in args.filename else run_other
 
