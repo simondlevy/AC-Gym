@@ -7,13 +7,6 @@ import os
 
 from libs.td3 import TD3, ReplayBuffer, eval_policy
 
-def eval_policy_learn(policy, env, seed, eval_episodes=10):
-    avg_reward,_ = eval_policy(policy, env, seed, eval_episodes)
-    print('---------------------------------------')
-    print('Evaluation over %d episodes: %+.3f' % (eval_episodes, avg_reward))
-    print('---------------------------------------')
-    return avg_reward
-
 def main():
     
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -23,6 +16,7 @@ def main():
     parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
     parser.add_argument('--test-iters', default=10, type=float,     help='How often (episodes) to test and save best')
+    parser.add_argument('--eval-episodes', default=10, type=float,  help='How many episodes to evaluate for average')
 
     parser.add_argument('--seed', default=0, type=int,              help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument('--start-iters', default=125, type=int,help='Epsiodes during which initial random policy is used')
@@ -114,7 +108,10 @@ def main():
 
         # Evaluate episode
         if episode_idx >= args.start_iters and episode_idx %args.test_iters == 0:
-            avg_reward = eval_policy_learn(policy, env, args.seed)
+            avg_reward,_ = eval_policy(policy, env, args.seed, args.eval_episodes)
+            print('---------------------------------------')
+            print('Evaluation over %d episodes: %+.3f' % (args.eval_episodes, avg_reward))
+            print('---------------------------------------')
             filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
             torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
