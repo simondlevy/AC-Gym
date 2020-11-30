@@ -175,11 +175,7 @@ class TD3:
         self.actor_target = copy.deepcopy(self.actor)
 
 # Runs policy for X episodes and returns average reward
-# A fixed seed is used for the eval environment
-def eval_policy(policy, env, seed=None, eval_episodes=10, render=False):
-
-    if seed is not None:
-        env.seed(seed + 100)
+def eval_policy(policy, env, eval_episodes=10, render=False):
 
     total_reward = 0.
     total_steps = 0

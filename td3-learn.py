@@ -17,8 +17,6 @@ def main():
     parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
     parser.add_argument('--test-iters', default=10, type=float,     help='How often (episodes) to test and save best')
     parser.add_argument('--eval-episodes', default=10, type=float,  help='How many episodes to evaluate for average')
-
-    parser.add_argument('--seed', default=0, type=int,              help='Sets Gym, PyTorch and Numpy seeds')
     parser.add_argument('--start-iters', default=125, type=int,help='Epsiodes during which initial random policy is used')
     parser.add_argument('--expl-noise', default=0.1,                help='Std of Gaussian exploration noise')
     parser.add_argument('--batch-size', default=256, type=int,      help='Batch size for both actor and critic')
@@ -33,30 +31,25 @@ def main():
 
     env = gym.make(args.env)
 
-    # Set seeds
-    env.seed(args.seed)
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
-    
     max_action = float(env.action_space.high[0])
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
     policy = TD3(
-        state_dim,
-        action_dim,
-		max_action,
-        args.nhid,
-		discount=args.gamma,
-		tau=args.tau,
-		policy_noise=args.policy_noise * max_action,
-		noise_clip=args.noise_clip * max_action,
-		policy_freq=args.policy_freq)
+            state_dim,
+            action_dim,
+            max_action,
+            args.nhid,
+            discount=args.gamma,
+            tau=args.tau,
+            policy_noise=args.policy_noise * max_action,
+            noise_clip=args.noise_clip * max_action,
+            policy_freq=args.policy_freq)
 
     replay_buffer = ReplayBuffer(state_dim, action_dim)
 
     env = gym.make(args.env)
-    
+
     evaluations = []
 
     state, done = env.reset(), False
@@ -68,7 +61,7 @@ def main():
     print('Running %d episodes with random action ...' % args.start_iters)
 
     while episode_idx < args.maxeps:
-        
+
         episode_timesteps += 1
 
         # Select action randomly or according to policy
@@ -76,9 +69,9 @@ def main():
             action = env.action_space.sample()
         else:
             action = (
-                policy.select_action(np.array(state))
-                + np.random.normal(0, max_action * args.expl_noise, size=action_dim)
-            ).clip(-max_action, max_action)
+                    policy.select_action(np.array(state))
+                    + np.random.normal(0, max_action * args.expl_noise, size=action_dim)
+                    ).clip(-max_action, max_action)
 
         # Perform action
         next_state, reward, done, _ = env.step(action) 
@@ -95,7 +88,7 @@ def main():
             policy.train(replay_buffer, args.batch_size)
 
         if done: 
-        
+
             if episode_idx >= args.start_iters:
                 print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
 
@@ -109,7 +102,7 @@ def main():
 
         # Evaluate episode
         if episode_idx >= args.start_iters and episode_idx %args.test_iters == 0:
-            avg_reward,_ = eval_policy(policy, env, args.seed, args.eval_episodes)
+            avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
             if best_reward is None or best_reward < avg_reward:
                 if best_reward is not None:
