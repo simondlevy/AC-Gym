@@ -70,6 +70,8 @@ def main():
     episode_timesteps = 0
     episode_idx = 0
 
+    print('Running %d episodes with random action ...' % args.start_iters)
+
     while episode_idx < args.maxeps:
         
         episode_timesteps += 1
@@ -99,8 +101,8 @@ def main():
 
         if done: 
         
-            # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
-            print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
+            if episode_idx >= args.start_iters:
+                print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
 
             # Reset environment
             state, done = env.reset(), False
