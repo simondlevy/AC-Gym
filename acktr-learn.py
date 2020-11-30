@@ -106,7 +106,7 @@ def main():
             args.batch_size, 
             args.entropy_beta)
 
-    solver.loop(args.test_iters, args.target, args.maxeps)
+    solver.loop(args.test_iters, args.target, args.maxeps, args.eval_episodes)
 
 if __name__ == '__main__':
     main()

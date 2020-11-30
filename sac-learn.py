@@ -113,7 +113,7 @@ def main():
             args.replay_initial,
             args.entropy_alpha)
 
-    solver.loop(args.test_iters, args.target, args.maxeps)
+    solver.loop(args.test_iters, args.target, args.maxeps, args.eval_episodes)
 
 if __name__ == '__main__':
     main()

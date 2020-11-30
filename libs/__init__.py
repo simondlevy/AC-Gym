@@ -31,7 +31,7 @@ class Solver:
 
         self.gamma = gamma
 
-    def loop(self, test_iters, target, maxeps):
+    def loop(self, test_iters, target, maxeps, eval_episodes):
 
         maxeps = np.inf if maxeps is None else maxeps
 
@@ -55,7 +55,7 @@ class Solver:
                 rewards, steps = zip(*rewards_steps)
 
             if episode_idx % test_iters == 0:
-                reward, steps = test_net(self.net_act, self.env, device=self.device)
+                reward, steps = test_net(self.net_act, self.env, eval_episodes, device=self.device)
                 print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx, reward, steps))
                 model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, episode_idx))
                 evaluations.append((episode_idx+1, reward))
@@ -92,6 +92,7 @@ def make_learn_parser():
     parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
     parser.add_argument('--gamma', default=0.99, help='Discount factor')
     parser.add_argument('--test-iters', default=100, type=float, help='How often to test and save best')
+    parser.add_argument('--eval-episodes', default=10, type=float,  help='How many episodes to evaluate for average')
 
     parser.add_argument('--cuda', default=False, action='store_true', help='Enable CUDA')
     parser.add_argument('--datafile', required=False, help='Name of data file to load')
