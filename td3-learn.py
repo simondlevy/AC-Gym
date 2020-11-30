@@ -63,14 +63,12 @@ def main():
 
     env = gym.make(args.env)
     
-    # Evaluate untrained policy
-    evaluations = [(1, eval_policy_learn(policy, env, args.seed))]
+    evaluations = []
 
     state, done = env.reset(), False
     episode_reward = 0
     episode_timesteps = 0
     episode_idx = 0
-    t = 0
 
     while episode_idx < args.maxeps:
         
@@ -101,8 +99,6 @@ def main():
 
         if done: 
         
-            print(t)
-
             # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
             print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
 
@@ -112,7 +108,7 @@ def main():
             episode_timesteps = 0
             episode_idx += 1 
 
-        evaluations.append((t+1,episode_reward))
+        evaluations.append((episode_idx+1,episode_reward))
 
         # Evaluate episode
         if  episode_idx  % args.test_iters == 0:
@@ -123,8 +119,6 @@ def main():
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
-
-        t += 1
 
 if __name__ == '__main__':
     main()
