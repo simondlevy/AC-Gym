@@ -1,4 +1,3 @@
-from time import time
 import gym
 from libs import ptan, model
 import numpy as np
@@ -9,34 +8,37 @@ import torch.optim as optim
 
 class Solver:
 
-    def __init__(self, env_name, algo_name, nhid, cuda, gamma, lr_critic):
+    def __init__(self, args, algo_name):
 
-        self.env = gym.make(env_name)
+        self.env = gym.make(args.env)
 
         os.makedirs('./models/', exist_ok=True)
-        self.models_path = './models/' + algo_name + '-' + env_name
+        self.models_path = './models/' + algo_name + '-' + args.env
         os.makedirs('./runs/', exist_ok=True)
-        self.runs_path = './runs/' + algo_name + '-' + env_name
+        self.runs_path = './runs/' + algo_name + '-' + args.env
 
-        self.device = torch.device('cuda' if cuda else 'cpu')
-        self.env_name = env_name
-        self.nhid = nhid
+        self.device = torch.device('cuda' if args.cuda else 'cpu')
+        self.env_name = args.env
+        self.nhid = args.nhid
 
-        self.net_act = model.ModelActor(self.env.observation_space.shape[0], self.env.action_space.shape[0], nhid).to(self.device)
-        self.net_crt = model.ModelCritic(self.env.observation_space.shape[0], nhid).to(self.device)
+        self.net_act = model.ModelActor(self.env.observation_space.shape[0], self.env.action_space.shape[0], self.nhid).to(self.device)
+        self.net_crt = model.ModelCritic(self.env.observation_space.shape[0], self.nhid).to(self.device)
 
-        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=lr_critic)
+        self.opt_crt = optim.Adam(self.net_crt.parameters(), lr=args.lr_critic)
 
         self.batch = []
 
-        self.gamma = gamma
+        self.maxeps = args.maxeps
+        self.test_iters = args.test_iters
+        self.eval_episodes = args.eval_episodes
+        self.target = args.target
+        self.gamma = args.gamma
 
-    def loop(self, test_iters, target, maxeps, eval_episodes):
+    def loop(self):
 
-        maxeps = np.inf if maxeps is None else maxeps
+        maxeps = np.inf if self.maxeps is None else self.maxeps
 
         best_reward = None
-        tstart = time()
 
         rewards_steps = None
 
@@ -46,16 +48,14 @@ class Solver:
 
             rewards_steps = self.exp_source.pop_rewards_steps()
 
-            tcurr = time()
-
             if episode_idx == maxeps:
                 break
             
             if rewards_steps:
                 rewards, steps = zip(*rewards_steps)
 
-            if episode_idx % test_iters == 0:
-                reward, steps = test_net(self.net_act, self.env, eval_episodes, device=self.device)
+            if episode_idx % self.test_iters == 0:
+                reward, steps = test_net(self.net_act, self.env, self.eval_episodes, device=self.device)
                 print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx, reward, steps))
                 model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, episode_idx))
                 evaluations.append((episode_idx+1, reward))
@@ -64,12 +64,12 @@ class Solver:
                         print('\n* Best reward updated: %.3f -> %.3f *\n' % (best_reward, reward))
                         self._save(model_fname)
                     best_reward = reward
-                if target is not None and reward >= target:
-                    print('Target %f achieved; saving %s' % (target,model_fname))
+                if self.target is not None and reward >= self.target:
+                    print('Target %f achieved; saving %s' % (self.target,model_fname))
                     self._save(model_fname)
                     break
 
-            self.update(exp, maxeps)
+            self.update(exp)
 
         np.save(self.runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
 

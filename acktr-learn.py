@@ -9,34 +9,23 @@ import torch.nn.functional as F
 
 class ACKTR(Solver):
 
-    def __init__(self,
-            env_name, 
-            nhid,
-            cuda,
-            envs_count, 
-            gamma, 
-            reward_steps, 
-            lr_actor, 
-            lr_critic, 
-            batch_size, 
-            entropy_beta):
+    def __init__(self, args):
 
-        envs = [gym.make(env_name) for _ in range(envs_count)]
+        envs = [gym.make(args.env) for _ in range(args.envs_count)]
 
-        Solver.__init__(self, env_name, 'acktr', nhid, cuda, gamma, lr_critic)
+        Solver.__init__(self, args, 'acktr')
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 
-        self. exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, gamma, steps_count=reward_steps)
+        self. exp_source = ptan.experience.ExperienceSourceFirstLast(envs, agent, args.gamma, steps_count=args.reward_steps)
 
-        self.opt_act = kfac.KFACOptimizer(self.net_act, lr=lr_actor)
+        self.opt_act = kfac.KFACOptimizer(self.net_act, lr=args.lr_actor)
 
-        self.batch_size = batch_size
-        self.reward_steps = reward_steps
-        self.entropy_beta = entropy_beta
+        self.batch_size   = args.batch_size
+        self.reward_steps = args.reward_steps
+        self.entropy_beta = args.entropy_beta
 
-
-    def update(self, exp, maxeps):
+    def update(self, exp):
 
         self.batch.append(exp)
         if len(self.batch) < self.batch_size:
@@ -94,19 +83,7 @@ def main():
 
     args = parser.parse_args()
 
-    solver = ACKTR(
-            args.env,
-            args.nhid,
-            args.cuda,
-            args.envs_count, 
-            args.gamma, 
-            args.reward_steps, 
-            args.lr_actor, 
-            args.lr_critic, 
-            args.batch_size, 
-            args.entropy_beta)
-
-    solver.loop(args.test_iters, args.target, args.maxeps, args.eval_episodes)
+    ACKTR(args).loop()
 
 if __name__ == '__main__':
     main()

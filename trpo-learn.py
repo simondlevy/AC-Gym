@@ -8,20 +8,11 @@ import torch.nn.functional as F
 
 class TRPO(Solver):
 
-    def __init__(self,
-            env_name, 
-            nhid,
-            cuda, 
-            gamma, 
-            lr, 
-            maxkl,
-            damping,
-            gae_lambda,
-            traj_size):
+    def __init__(self, args):
 
-        env = gym.make(env_name)
+        env = gym.make(args.env)
 
-        Solver.__init__(self, env_name, 'trpo', nhid, cuda, gamma, lr)
+        Solver.__init__(self, args, 'trpo')
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 
@@ -29,13 +20,13 @@ class TRPO(Solver):
 
         self.trajectory = []
 
-        self.traj_size = traj_size
-        self.maxkl = maxkl 
-        self.damping = damping
-        self.gae_lambda = gae_lambda 
+        self.traj_size  = args.traj_size
+        self.maxkl      = args.maxkl 
+        self.damping    = args.damping
+        self.gae_lambda = args.gae_lambda 
 
 
-    def update(self, exp, maxeps):
+    def update(self, exp):
 
         self.trajectory.append(exp)
         if len(self.trajectory) < self.traj_size:
@@ -125,7 +116,7 @@ def main():
 
     parser = make_learn_parser()
 
-    parser.add_argument('--lr', default=1e-3, type=float, help='Critic learning rate')
+    parser.add_argument('--lr-critic', default=1e-3, type=float, help='Critic learning rate')
     parser.add_argument('--maxkl', default=0.01, type=float, help='Maximum KL divergence')
     parser.add_argument('--damping', default=0.1, type=float, help='Damping')
     parser.add_argument('--gae-lambda', default=0.95, type=float, help='Lambda for Generalized Advantage Estimation')
@@ -133,18 +124,7 @@ def main():
 
     args = parser.parse_args()
 
-    solver = TRPO(
-            args.env, 
-            args.nhid,
-            args.cuda, 
-            args.gamma, 
-            args.lr, 
-            args.maxkl,
-            args.damping,
-            args.gae_lambda,
-            args.traj_size)
-
-    solver.loop(args.test_iters, args.target, args.maxeps, args.eval_episodes)
+    TRPO(args).loop()
 
 if __name__ == '__main__':
     main()

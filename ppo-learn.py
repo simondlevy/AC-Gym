@@ -9,31 +9,23 @@ import torch.nn.functional as F
 
 class PPO(Solver):
 
-    def __init__(self,
-            env_name, 
-            nhid,
-            cuda, 
-            gamma, 
-            lr_actor, 
-            lr_critic, 
-            batch_size,
-            traj_size):
+    def __init__(self, args):
 
-        env = gym.make(env_name)
+        env = gym.make(args.env)
 
-        Solver.__init__(self, env_name, 'ppo', nhid, cuda, gamma, lr_critic)
+        Solver.__init__(self, args, 'ppo')
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 
         self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
 
-        self.opt_act = optim.Adam(self.net_act.parameters(), lr=lr_actor)
+        self.opt_act = optim.Adam(self.net_act.parameters(), lr=args.lr_actor)
 
         self.trajectory = []
-        self.batch_size = batch_size
-        self.traj_size = traj_size
+        self.batch_size = args.batch_size
+        self.traj_size  = args.traj_size
 
-    def update(self, exp, maxeps):
+    def update(self, exp):
 
         self.trajectory.append(exp)
         if len(self.trajectory) < self.traj_size:
@@ -152,17 +144,7 @@ def main():
 
     args = parser.parse_args()
 
-    solver = PPO(
-            args.env,
-            args.nhid,
-            args.cuda,
-            args.gamma,
-            args.lr_actor,
-            args.lr_critic,
-            args.batch_size,
-            args.traj_size)
-
-    solver.loop(args.test_iters, args.target, args.maxeps, args.eval_episodes)
+    PPO(args).loop()
 
 if __name__ == '__main__':
     main()
