@@ -63,6 +63,7 @@ def main():
     episode_reward = 0
     episode_timesteps = 0
     episode_idx = 0
+    best_reward = None
 
     print('Running %d episodes with random action ...' % args.start_iters)
 
@@ -109,12 +110,15 @@ def main():
         # Evaluate episode
         if episode_idx >= args.start_iters and episode_idx %args.test_iters == 0:
             avg_reward,_ = eval_policy(policy, env, args.seed, args.eval_episodes)
-            print('---------------------------------------')
-            print('Evaluation over %d episodes: %+.3f' % (args.eval_episodes, avg_reward))
-            print('---------------------------------------')
-            filename = 'td3-%s%+f' % (args.env, avg_reward)
-            np.save('./runs/' + filename, evaluations)
-            torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
+
+            if best_reward is None or best_reward < avg_reward:
+                if best_reward is not None:
+                    print('\n* Best reward updated: %.3f -> %.3f *\n' % (best_reward, avg_reward))
+                    filename = 'td3-%s%+f' % (args.env, avg_reward)
+                    np.save('./runs/' + filename, evaluations)
+                    torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
+                best_reward = avg_reward
+
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
