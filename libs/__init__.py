@@ -91,10 +91,10 @@ def make_learn_parser():
     parser.add_argument('--maxeps', default=None, type=int, help='Maximum number of episodes')
     parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
     parser.add_argument('--gamma', default=0.99, help='Discount factor')
+    parser.add_argument('--test-iters', default=100, type=float, help='How often to test and save best')
 
     parser.add_argument('--cuda', default=False, action='store_true', help='Enable CUDA')
     parser.add_argument('--datafile', required=False, help='Name of data file to load')
-    parser.add_argument('--test-iters', default=100, type=float, help='How often to test and save best')
     return parser
 
 def test_net(net, env, count=10, device='cpu'):

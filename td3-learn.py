@@ -22,10 +22,10 @@ def main():
     parser.add_argument('--maxeps', default=np.inf, type=int,       help='Maximum number of episodes')
     parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
     parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
+    parser.add_argument('--test-iters', default=10, type=float,     help='How often (episodes) to test and save best')
 
     parser.add_argument('--seed', default=0, type=int,              help='Sets Gym, PyTorch and Numpy seeds')
-    parser.add_argument('--start_timesteps', default=25e3, type=int,help='Time steps initial random policy is used')
-    parser.add_argument('--eval-freq', default=5e3, type=int,       help='How often (time steps, we evaluate')
+    parser.add_argument('--start-iters', default=125, type=int,help='Epsiodes during which initial random policy is used')
     parser.add_argument('--expl-noise', default=0.1,                help='Std of Gaussian exploration noise')
     parser.add_argument('--batch-size', default=256, type=int,      help='Batch size for both actor and critic')
     parser.add_argument('--tau', default=0.005,                     help='Target network update rate')
@@ -77,7 +77,7 @@ def main():
         episode_timesteps += 1
 
         # Select action randomly or according to policy
-        if t < args.start_timesteps:
+        if episode_idx < args.start_iters:
             action = env.action_space.sample()
         else:
             action = (
@@ -96,10 +96,12 @@ def main():
         episode_reward += reward
 
         # Train agent after collecting sufficient data
-        if t >= args.start_timesteps:
+        if episode_idx >= args.start_iters:
             policy.train(replay_buffer, args.batch_size)
 
         if done: 
+        
+            print(t)
 
             # +1 to account for 0 indexing. +0 on ep_timesteps since it will increment +1 even if done=True
             print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
@@ -113,7 +115,7 @@ def main():
         evaluations.append((t+1,episode_reward))
 
         # Evaluate episode
-        if (t + 1) % args.eval_freq == 0:
+        if  episode_idx  % args.test_iters == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
             filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
