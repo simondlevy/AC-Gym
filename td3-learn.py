@@ -111,7 +111,7 @@ def main():
         evaluations.append((episode_idx+1,episode_reward))
 
         # Evaluate episode
-        if  episode_idx  % args.test_iters == 0:
+        if episode_idx >= args.start_iters and episode_idx %args.test_iters == 0:
             avg_reward = eval_policy_learn(policy, env, args.seed)
             filename = 'td3-%s%+f' % (args.env, avg_reward)
             np.save('./runs/' + filename, evaluations)
