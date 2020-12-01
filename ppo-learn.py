@@ -24,6 +24,9 @@ class PPO(Solver):
         self.trajectory = []
         self.batch_size = args.batch_size
         self.traj_size  = args.traj_size
+        self.gae_lambda = args.gae_lambda
+        self.epochs     = args.epochs
+        self.epsilon    = args.epsilon
 
     def update(self, exp):
 
