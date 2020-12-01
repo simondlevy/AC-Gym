@@ -4,7 +4,7 @@ import numpy as np
 from collections import deque
 import gym
 from gym import spaces
-import cv2
+#import cv2 # XXX do we need cv2 (OpenCV)?
 
 
 class NoopResetEnv(gym.Wrapper):
@@ -144,7 +144,7 @@ class ProcessFrame84(gym.ObservationWrapper):
         else:
             assert False, "Unknown resolution."
         img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
-        resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
+        #resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
         x_t = resized_screen[18:102, :]
         x_t = np.reshape(x_t, [84, 84, 1])
         return x_t.astype(np.uint8)
