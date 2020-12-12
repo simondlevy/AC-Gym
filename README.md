@@ -33,3 +33,9 @@ If you have installed [matplotlib](https://matplotlib.org/), you can visualize t
 ## Next steps
 
 Running a given script with the ```--help``` option will show you the possibilities available for using that script.
+
+## Related projects
+
+* [NEAT-Gym](https://github.com/simondlevy/NEAT-Gym)
+
+* [CMA-Gym](https://github.com/simondlevy/CMA-Gym)
