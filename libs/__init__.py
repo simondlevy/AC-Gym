@@ -61,7 +61,7 @@ class Solver:
                 evaluations.append((episode_idx+1, reward))
                 if best_reward is None or best_reward < reward:
                     if best_reward is not None:
-                        print('\n* Best reward updated: %.3f -> %.3f *\n' % (best_reward, reward))
+                        print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, reward))
                         self._save(model_fname)
                     best_reward = reward
                 if self.target is not None and reward >= self.target:

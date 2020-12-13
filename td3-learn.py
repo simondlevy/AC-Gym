@@ -106,7 +106,7 @@ def main():
 
             if best_reward is None or best_reward < avg_reward:
                 if best_reward is not None:
-                    print('\n* Best reward updated: %.3f -> %.3f *\n' % (best_reward, avg_reward))
+                    print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, avg_reward))
                     filename = 'td3-%s%+f' % (args.env, avg_reward)
                     np.save('./runs/' + filename, evaluations)
                     torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
