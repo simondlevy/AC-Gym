@@ -21,13 +21,13 @@ reward of  -500 is reached (which takes about 23 seconds on my Asus Predator
 Helios laptop).  Once the program completes, you can display the results by
 running
 
-```python3 test.py models/td3-Pendulum-v0-<REWARD>.dat```
+```python3 ac-test.py models/td3-Pendulum-v0-<REWARD>.dat```
 
 where ```<REWARD>``` is the reward value.
 
 If you have installed [matplotlib](https://matplotlib.org/), you can visualize the episode reward over time by running
 
-```python3 plot.py models/td3-Pendulum-v0-<REWARD>.dat```
+```python3 ac-plot.py models/td3-Pendulum-v0-<REWARD>.dat```
 
 
 ## Next steps
