@@ -7,23 +7,29 @@ import os
 
 from libs.td3 import TD3, ReplayBuffer, eval_policy
 
+def _save(args, avg_reward, evaluations, policy):
+    filename = 'td3-%s%+f' % (args.env, avg_reward)
+    np.save('./runs/' + filename, evaluations)
+    torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
+
 def main():
     
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--env', default='Pendulum-v0',             help='OpenAI gym environment name')
-    parser.add_argument('--nhid', default='64',type=int,            help='Number of hidden units')
-    parser.add_argument('--maxeps', default=np.inf, type=int,       help='Maximum number of episodes')
-    parser.add_argument('--target', type=float, default=np.inf,     help='Quitting criterion for average reward')
-    parser.add_argument('--gamma', default=0.99,                    help='Discount factor')
-    parser.add_argument('--test-iters', default=10, type=float,     help='How often (episodes) to test and save best')
-    parser.add_argument('--eval-episodes', default=10, type=float,  help='How many episodes to evaluate for average')
+    parser.add_argument('--env', default='Pendulum-v0', help='OpenAI gym environment name')
+    parser.add_argument('--checkpoint', dest='checkpoint', action='store_true', help='Save at each new best')
+    parser.add_argument('--nhid', default='64',type=int, help='Number of hidden units')
+    parser.add_argument('--maxeps', default=np.inf, type=int, help='Maximum number of episodes')
+    parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
+    parser.add_argument('--gamma', default=0.99, help='Discount factor')
+    parser.add_argument('--test-iters', default=10, type=float, help='How often (episodes) to test and save best')
+    parser.add_argument('--eval-episodes', default=10, type=float, help='How many episodes to evaluate for average')
     parser.add_argument('--start-iters', default=125, type=int,help='Epsiodes during which initial random policy is used')
-    parser.add_argument('--expl-noise', default=0.1,                help='Std of Gaussian exploration noise')
-    parser.add_argument('--batch-size', default=256, type=int,      help='Batch size for both actor and critic')
-    parser.add_argument('--tau', default=0.005,                     help='Target network update rate')
-    parser.add_argument('--policy-noise', default=0.2,              help='Noise added to target policy during critic update')
-    parser.add_argument('--noise-clip', default=0.5,                help='Range to clip target policy noise')
-    parser.add_argument('--policy-freq', default=2, type=int,       help='Frequency of delayed policy updates')
+    parser.add_argument('--expl-noise', default=0.1, help='Std of Gaussian exploration noise')
+    parser.add_argument('--batch-size', default=256, type=int, help='Batch size for both actor and critic')
+    parser.add_argument('--tau', default=0.005, help='Target network update rate')
+    parser.add_argument('--policy-noise', default=0.2, help='Noise added to target policy during critic update')
+    parser.add_argument('--noise-clip', default=0.5, help='Range to clip target policy noise')
+    parser.add_argument('--policy-freq', default=2, type=int, help='Frequency of delayed policy updates')
     args = parser.parse_args()
 
     os.makedirs('./runs', exist_ok=True)
@@ -60,7 +66,7 @@ def main():
 
     print('Running %d episodes with random action ...' % args.start_iters)
 
-    while episode_idx < args.maxeps:
+    while episode_idx < (args.start_iters+args.maxeps):
 
         episode_timesteps += 1
 
@@ -102,19 +108,22 @@ def main():
 
         # Evaluate episode
         if episode_idx >= args.start_iters and episode_idx %args.test_iters == 0:
+
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
-            if best_reward is None or best_reward < avg_reward:
+            if args.checkpoint and (best_reward is None or best_reward < avg_reward):
                 if best_reward is not None:
                     print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, avg_reward))
-                    filename = 'td3-%s%+f' % (args.env, avg_reward)
-                    np.save('./runs/' + filename, evaluations)
-                    torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
+                    _save(args, avg_reward, evaluations, policy)
                 best_reward = avg_reward
 
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
+
+    # Save final net
+    avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+    _save(args, avg_reward, evaluations, policy)
 
 if __name__ == '__main__':
     main()
