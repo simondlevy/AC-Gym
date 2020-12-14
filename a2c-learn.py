@@ -2,7 +2,7 @@
 import math
 import gym
 
-from libs import Solver, ptan, model, common, calc_logprob, make_learn_parser
+from ac_gym import Solver, ptan, model, common, calc_logprob, make_learn_parser
 
 import torch
 import torch.optim as optim

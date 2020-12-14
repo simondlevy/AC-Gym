@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import math
 
-from libs import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser
+from ac_gym import Solver, ptan, model, common, kfac, calc_logprob, make_learn_parser
 
 import gym
 import torch

@@ -1,4 +1,4 @@
-from libs import ptan
+from ac_gym import ptan
 import numpy as np
 import torch
 import torch.nn as nn

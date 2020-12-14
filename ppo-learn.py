@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import gym
 
-from libs import Solver, ptan, model, calc_logprob, make_learn_parser
+from ac_gym import Solver, ptan, model, calc_logprob, make_learn_parser
 
 import torch
 import torch.optim as optim

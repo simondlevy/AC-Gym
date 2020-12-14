@@ -1,5 +1,5 @@
 import gym
-from libs import ptan, model
+from ac_gym import ptan, model
 import numpy as np
 import torch
 import argparse

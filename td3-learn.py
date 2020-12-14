@@ -5,7 +5,7 @@ import gym
 import argparse
 import os
 
-from libs.td3 import TD3, ReplayBuffer, eval_policy
+from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
 def _save(args, avg_reward, evaluations, policy):
     filename = 'td3-%s%+f' % (args.env, avg_reward)
