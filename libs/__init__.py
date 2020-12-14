@@ -28,6 +28,7 @@ class Solver:
 
         self.batch = []
 
+        self.checkpoint = args.checkpoint
         self.maxeps = args.maxeps
         self.test_iters = args.test_iters
         self.eval_episodes = args.eval_episodes
@@ -57,9 +58,9 @@ class Solver:
             if episode_idx % self.test_iters == 0:
                 reward, steps = test_net(self.net_act, self.env, self.eval_episodes, device=self.device)
                 print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx, reward, steps))
-                model_fname = self.models_path + ('%+.3f_%d.dat' % (reward, episode_idx))
+                model_fname = self.models_path + ('%+.3f.dat' % reward)
                 evaluations.append((episode_idx+1, reward))
-                if best_reward is None or best_reward < reward:
+                if self.checkpoint and (best_reward is None or best_reward < reward):
                     if best_reward is not None:
                         print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, reward))
                         self._save(model_fname)
@@ -72,11 +73,13 @@ class Solver:
             self.update(exp)
 
         np.save(self.runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
+        reward, _ = test_net(self.net_act, self.env, self.eval_episodes, device=self.device)
+        model_fname = self.models_path + ('%+.3f.dat' % reward)
+        self._save(model_fname)
 
     def _save(self, model_fname):
 
         d = self._clean(self.net_act.state_dict())
-
         torch.save((d,self.env_name,self.nhid), open(model_fname, 'wb'))
 
     def _clean(self, net):
@@ -87,6 +90,7 @@ class Solver:
 def make_learn_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env', default='Pendulum-v0', help='Environment id')
+    parser.add_argument('--checkpoint', dest='checkpoint', action='store_true', help='Save at each new best')
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--maxeps', default=None, type=int, help='Maximum number of episodes')
     parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
