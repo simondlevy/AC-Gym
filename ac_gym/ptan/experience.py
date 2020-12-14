@@ -8,8 +8,8 @@ import numpy as np
 
 from collections import namedtuple, deque
 
-from .agent import BaseAgent
-from .common import utils
+from ac_gym.ptan.agent import BaseAgent
+from ac_gym.ptan.common import utils
 
 # one single experience step
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done'])
