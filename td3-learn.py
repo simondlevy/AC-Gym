@@ -7,8 +7,11 @@ import os
 
 from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
+from sys import stdout
+
 def _save(args, avg_reward, evaluations, policy):
-    filename = 'td3-%s%+f' % (args.env, avg_reward)
+    stdout.flush()
+    filename = 'td3-%s%+010.3f' % (args.env, avg_reward)
     np.save('./runs/' + filename, evaluations)
     torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
 

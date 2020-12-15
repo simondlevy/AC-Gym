@@ -58,7 +58,7 @@ class Solver:
             if episode_idx % self.test_iters == 0:
                 reward, steps = test_net(self.net_act, self.env, self.eval_episodes, device=self.device)
                 print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx, reward, steps))
-                model_fname = self.models_path + ('%+.3f.dat' % reward)
+                model_fname = self.models_path + ('%+010.3f.dat' % reward)
                 evaluations.append((episode_idx+1, reward))
                 if self.checkpoint and (best_reward is None or best_reward < reward):
                     if best_reward is not None:
@@ -74,7 +74,7 @@ class Solver:
 
         np.save(self.runs_path+('' if best_reward is None else ('%f'%best_reward)), evaluations)
         reward, _ = test_net(self.net_act, self.env, self.eval_episodes, device=self.device)
-        model_fname = self.models_path + ('%+.3f.dat' % reward)
+        model_fname = self.models_path + ('%+010.3f.dat' % reward)
         self._save(model_fname)
 
     def _save(self, model_fname):
