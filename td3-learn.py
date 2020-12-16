@@ -66,6 +66,7 @@ def main():
     episode_timesteps = 0
     episode_idx = 0
     best_reward = None
+    just_tested = False
 
     print('Running %d episodes with random action ...' % args.start_episodes)
 
@@ -98,21 +99,27 @@ def main():
 
         if done: 
 
-            if episode_idx >= args.start_episodes:
-                print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
+            if not just_tested:
+                if episode_idx >= args.start_episodes:
+                    print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
 
-            # Reset environment
+            # Reset everything
             state, done = env.reset(), False
             episode_reward = 0
             episode_timesteps = 0
             episode_idx += 1 
+            just_tested = False
 
         evaluations.append((episode_idx+1,episode_reward))
 
         # Evaluate episode
         if episode_idx >= args.start_episodes and episode_idx %args.test_iters == 0:
 
+            print('Episode %07d:\ttesting' % (episode_idx+1))
+
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+
+            just_tested = True
 
             if args.checkpoint and (best_reward is None or best_reward < avg_reward):
                 if best_reward is not None:
