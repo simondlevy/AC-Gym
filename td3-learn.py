@@ -26,7 +26,7 @@ def main():
     parser.add_argument('--gamma', default=0.99, help='Discount factor')
     parser.add_argument('--test-iters', default=10, type=float, help='How often (episodes) to test and save best')
     parser.add_argument('--eval-episodes', default=10, type=float, help='How many episodes to evaluate for average')
-    parser.add_argument('--start-iters', default=125, type=int,help='Epsiodes during which initial random policy is used')
+    parser.add_argument('--start-episodes', default=125, type=int,help='Epsiodes during which initial random policy is used')
     parser.add_argument('--expl-noise', default=0.1, help='Std of Gaussian exploration noise')
     parser.add_argument('--batch-size', default=256, type=int, help='Batch size for both actor and critic')
     parser.add_argument('--tau', default=0.005, help='Target network update rate')
@@ -67,14 +67,14 @@ def main():
     episode_idx = 0
     best_reward = None
 
-    print('Running %d episodes with random action ...' % args.start_iters)
+    print('Running %d episodes with random action ...' % args.start_episodes)
 
-    while episode_idx < (args.start_iters+args.maxeps):
+    while episode_idx < (args.start_episodes+args.maxeps):
 
         episode_timesteps += 1
 
         # Select action randomly or according to policy
-        if episode_idx < args.start_iters:
+        if episode_idx < args.start_episodes:
             action = env.action_space.sample()
         else:
             action = (
@@ -93,12 +93,12 @@ def main():
         episode_reward += reward
 
         # Train agent after collecting sufficient data
-        if episode_idx >= args.start_iters:
+        if episode_idx >= args.start_episodes:
             policy.train(replay_buffer, args.batch_size)
 
         if done: 
 
-            if episode_idx >= args.start_iters:
+            if episode_idx >= args.start_episodes:
                 print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
 
             # Reset environment
@@ -110,7 +110,7 @@ def main():
         evaluations.append((episode_idx+1,episode_reward))
 
         # Evaluate episode
-        if episode_idx >= args.start_iters and episode_idx %args.test_iters == 0:
+        if episode_idx >= args.start_episodes and episode_idx %args.test_iters == 0:
 
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
