@@ -55,7 +55,7 @@ def run_other(parts, env, nhid, record):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename', metavar='FILENAME', help='input file')
+    parser.add_argument('filename', metavar='FILENAME', help='.dat input file')
     parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()

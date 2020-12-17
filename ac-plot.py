@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename', metavar='FILENAME', help='input file')
+    parser.add_argument('filename', metavar='FILENAME', help='.npy input file')
     args = parser.parse_args()
     
     a = np.load(args.filename)
