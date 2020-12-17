@@ -135,5 +135,4 @@ def main():
     avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
     _save(args, avg_reward, evaluations, policy)
 
-if __name__ == '__main__':
-    main()
+main()

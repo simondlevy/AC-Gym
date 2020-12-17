@@ -149,5 +149,4 @@ def main():
 
     PPO(args).loop()
 
-if __name__ == '__main__':
-    main()
+main()
