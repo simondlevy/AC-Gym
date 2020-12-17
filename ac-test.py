@@ -11,7 +11,7 @@ from ac_gym.td3 import TD3, eval_policy
 import numpy as np
 import torch
 
-def run_td3(parts, env, nhid, record):
+def run_td3(parts, env, nhid, nodisplay):
 
     policy = TD3(
             env.observation_space.shape[0],
@@ -21,9 +21,9 @@ def run_td3(parts, env, nhid, record):
 
     policy.set(parts)
 
-    return eval_policy(policy, env, render=(not record), eval_episodes=1)
+    return eval_policy(policy, env, render=(not nodisplay), eval_episodes=1)
 
-def run_other(parts, env, nhid, record):
+def run_other(parts, env, nhid, nodisplay):
 
     net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid)
 
@@ -41,7 +41,7 @@ def run_other(parts, env, nhid, record):
         if np.isscalar(action): 
             action = [action]
         obs, reward, done, _ = env.step(action)
-        if record is None:
+        if not nodisplay:
             env.render('rgb_array')
             time.sleep(.02)
         total_reward += reward
@@ -54,9 +54,10 @@ def run_other(parts, env, nhid, record):
 
 def main():
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('filename', metavar='FILENAME', help='.dat input file')
     parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
+    parser.add_argument('--nodisplay', dest='nodisplay', action='store_true', help='Suppress display')
     parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
@@ -74,9 +75,9 @@ def main():
 
     fun = run_td3 if 'td3' in args.filename else run_other
 
-    reward, steps = fun(parts, env, nhid, args.record)
+    reward, steps = fun(parts, env, nhid, args.nodisplay)
 
-    print('In %d steps we got %.3f reward' % (steps, reward))
+    print('In %d steps we got %.3f reward.' % (steps, reward))
 
     env.close()
 
