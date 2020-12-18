@@ -64,18 +64,18 @@ def main():
     state, done = env.reset(), False
     episode_reward = 0
     episode_timesteps = 0
-    episode_idx = 0
+    episode_index = 0
     best_reward = None
     just_tested = False
 
     print('Running %d episodes with random action ...' % args.start_episodes)
 
-    while episode_idx < (args.start_episodes+args.maxeps):
+    while episode_index < (args.start_episodes+args.maxeps):
 
         episode_timesteps += 1
 
         # Select action randomly or according to policy
-        if episode_idx < args.start_episodes:
+        if episode_index < args.start_episodes:
             action = env.action_space.sample()
         else:
             action = (
@@ -94,28 +94,31 @@ def main():
         episode_reward += reward
 
         # Train agent after collecting sufficient data
-        if episode_idx >= args.start_episodes:
+        if episode_index >= args.start_episodes:
             policy.train(replay_buffer, args.batch_size)
 
         if done: 
 
             if not just_tested:
-                if episode_idx >= args.start_episodes:
-                    print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (episode_idx+1, episode_reward, episode_timesteps))
+                if episode_index >= args.start_episodes:
+                    print('Episode %07d:\treward = %+.3f,\tsteps = %d' % 
+                            (episode_index-args.start_episodes+1, episode_reward, episode_timesteps))
 
             # Reset everything
             state, done = env.reset(), False
             episode_reward = 0
             episode_timesteps = 0
-            episode_idx += 1 
+            episode_index += 1 
             just_tested = False
 
-        evaluations.append((episode_idx+1,episode_reward))
+        evaluations.append((episode_index+1,episode_reward))
 
         # Evaluate episode
-        if episode_idx >= args.start_episodes and episode_idx %args.test_iters == 0:
+        #if episode_index >= args.start_episodes and (episode_index-args.start_episodes) %args.test_iters == 0:
+        test_index = episode_index - args.start_episodes
+        if test_index > 0 and test_index%args.test_iters == 0:
 
-            print('Episode %07d:\ttesting' % (episode_idx+1))
+            print('Episode %07d:\ttesting' % (episode_index-args.start_episodes+1))
 
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
