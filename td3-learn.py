@@ -114,25 +114,24 @@ def main():
         evaluations.append((episode_index+1,episode_reward))
 
         # Evaluate episode
-        if args.checkpoint:
-            test_index = episode_index - args.start_episodes
-            if test_index > 0 and test_index%args.test_iters == 0:
+        test_index = episode_index - args.start_episodes
+        if test_index > 0 and test_index%args.test_iters == 0:
 
-                print('Episode %07d:\ttesting' % (episode_index-args.start_episodes+1))
+            print('Episode %07d:\ttesting' % (episode_index-args.start_episodes+1))
 
-                avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+            avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
-                just_tested = True
+            just_tested = True
 
-                if args.checkpoint and (best_reward is None or best_reward < avg_reward):
-                    if best_reward is not None:
-                        print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, avg_reward))
-                        _save(args, avg_reward, evaluations, policy)
-                    best_reward = avg_reward
+            if args.checkpoint and (best_reward is None or best_reward < avg_reward):
+                if best_reward is not None:
+                    print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, avg_reward))
+                    _save(args, avg_reward, evaluations, policy)
+                best_reward = avg_reward
 
-                if avg_reward >= args.target:
-                    print('Target average reward %f achieved' % args.target)
-                    break
+            if avg_reward >= args.target:
+                print('Target average reward %f achieved' % args.target)
+                break
 
     # Save final net
     avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
