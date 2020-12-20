@@ -117,7 +117,7 @@ def main():
         test_index = episode_index - args.start_episodes
         if test_index > 0 and test_index%args.test_iters == 0:
 
-            print('Episode %07d:\ttesting' % (episode_index-args.start_episodes+1))
+            print('Testing ...')
 
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
