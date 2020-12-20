@@ -67,6 +67,7 @@ def main():
     episode_index = 0
     best_reward = None
     just_tested = False
+    report_index = 1
 
     print('Running %d episodes with random action ...' % args.start_episodes)
 
@@ -99,10 +100,11 @@ def main():
 
         if done: 
 
-            if not just_tested:
+            if True:#not just_tested:
                 if episode_index >= args.start_episodes:
-                    print('Episode %07d:\treward = %+.3f,\tsteps = %d' % 
-                            (episode_index-args.start_episodes+1, episode_reward, episode_timesteps))
+                    print('Episode %07d (%07d):\treward = %+.3f,\tsteps = %d' % 
+                            (episode_index-args.start_episodes+1, report_index, episode_reward, episode_timesteps))
+                    report_index += 1
 
             # Reset everything
             state, done = env.reset(), False
