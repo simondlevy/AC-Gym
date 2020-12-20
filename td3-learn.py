@@ -101,8 +101,7 @@ def main():
         if done: 
 
             if episode_timesteps>1 and episode_index >= args.start_episodes:
-                print('Episode %07d (%07d):\treward = %+.3f,\tsteps = %d' % 
-                        (episode_index-args.start_episodes+1, report_index, episode_reward, episode_timesteps))
+                print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (report_index, episode_reward, episode_timesteps))
                 report_index += 1
 
             # Reset everything
