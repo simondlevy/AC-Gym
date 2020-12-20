@@ -122,8 +122,6 @@ def main():
 
             print('Testing ...')
 
-            just_tested = True
-
             test_iters = args.test_iters+1
 
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
