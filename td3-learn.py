@@ -66,12 +66,12 @@ def main():
     episode_timesteps = 0
     episode_index = 0
     best_reward = None
-    just_tested = False
     report_index = 1
+    test_iters = args.test_iters
 
     print('Running %d episodes with random action ...' % args.start_episodes)
 
-    while episode_index < (args.start_episodes+args.maxeps):
+    while report_index <= args.maxeps:
 
         episode_timesteps += 1
 
@@ -100,30 +100,28 @@ def main():
 
         if done: 
 
-            if True:#not just_tested:
-                if episode_index >= args.start_episodes:
-                    print('Episode %07d (%07d):\treward = %+.3f,\tsteps = %d' % 
-                            (episode_index-args.start_episodes+1, report_index, episode_reward, episode_timesteps))
-                    report_index += 1
+            if episode_timesteps>1 and episode_index >= args.start_episodes:
+                print('Episode %07d (%07d):\treward = %+.3f,\tsteps = %d' % 
+                        (episode_index-args.start_episodes+1, report_index, episode_reward, episode_timesteps))
+                report_index += 1
 
             # Reset everything
             state, done = env.reset(), False
             episode_reward = 0
             episode_timesteps = 0
             episode_index += 1 
-            just_tested = False
 
         evaluations.append((episode_index+1,episode_reward))
 
         # Evaluate episode
         test_index = episode_index - args.start_episodes
-        if test_index > 0 and test_index%args.test_iters == 0:
+        if test_index > 0 and test_index%test_iters == 0:
 
             print('Testing ...')
 
-            avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+            test_iters = args.test_iters+1
 
-            just_tested = True
+            avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
 
             if args.checkpoint and (best_reward is None or best_reward < avg_reward):
                 if best_reward is not None:
