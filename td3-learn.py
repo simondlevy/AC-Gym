@@ -120,7 +120,8 @@ def main():
         test_index = episode_index - args.start_episodes
         if test_index > 0 and test_index%test_iters == 0:
 
-            print('Testing ...')
+            if test_index != args.test_iters+1:
+                print('Testing ...')
 
             test_iters = args.test_iters+1
 
