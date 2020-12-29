@@ -120,12 +120,17 @@ def main():
         test_index = episode_index - args.start_episodes
         if test_index > 0 and test_index%test_iters == 0:
 
-            if test_index != args.test_iters+1:
-                print('Testing ...')
+            testing = test_index != args.test_iters+1
+
+            if testing:
+                print('Testing ... ', end='')
 
             test_iters = args.test_iters+1
 
             avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+
+            if testing:
+                print('reward = %+.3f' % avg_reward)
 
             if args.checkpoint and (best_reward is None or best_reward < avg_reward):
                 if best_reward is not None:
