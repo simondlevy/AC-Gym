@@ -10,6 +10,9 @@ commit:
 flake:
 	flake8 *.py
 	flake8 ac_gym/*.py
-	flake8 ac_gym/ptan/*.py
+	flake8 ac_gym/ptan/actions.py
+	flake8 ac_gym/ptan/agent.py
+	flake8 ac_gym/ptan/experience.py
+	flake8 ac_gym/ptan/ignite.py
 	flake8 ac_gym/ptan/common/*.py
 
