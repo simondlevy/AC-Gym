@@ -13,26 +13,43 @@ def _save(args, avg_reward, evaluations, policy):
     stdout.flush()
     filename = 'td3-%s%+010.3f' % (args.env, avg_reward)
     np.save('./runs/' + filename, evaluations)
-    torch.save((policy.get(), args.env, args.nhid) , open('./models/'+filename+'.dat', 'wb'))
+    torch.save((policy.get(), args.env, args.nhid),
+               open('./models/'+filename+'.dat', 'wb'))
+
 
 def main():
-    
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--env', default='Pendulum-v0', help='OpenAI gym environment name')
-    parser.add_argument('--checkpoint', dest='checkpoint', action='store_true', help='Save at each new best')
-    parser.add_argument('--nhid', default='64',type=int, help='Number of hidden units')
-    parser.add_argument('--maxeps', default=np.inf, type=int, help='Maximum number of episodes')
-    parser.add_argument('--target', type=float, default=np.inf, help='Quitting criterion for average reward')
+
+    fmtr = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=fmtr)
+    parser.add_argument('--env', default='Pendulum-v0',
+                        help='Gym environment name')
+    parser.add_argument('--checkpoint', dest='checkpoint', action='store_true',
+                        help='Save at each new best')
+    parser.add_argument('--nhid', default='64', type=int,
+                        help='Number of hidden units')
+    parser.add_argument('--maxeps', default=np.inf, type=int,
+                        help='Maximum number of episodes')
+    parser.add_argument('--target', type=float, default=np.inf,
+                        help='Quitting criterion for average reward')
     parser.add_argument('--gamma', default=0.99, help='Discount factor')
-    parser.add_argument('--test-iters', default=10, type=float, help='How often (episodes) to test and save best')
-    parser.add_argument('--eval-episodes', default=10, type=float, help='How many episodes to evaluate for average')
-    parser.add_argument('--start-episodes', default=125, type=int,help='Epsiodes during which initial random policy is used')
-    parser.add_argument('--expl-noise', default=0.1, help='Std of Gaussian exploration noise')
-    parser.add_argument('--batch-size', default=256, type=int, help='Batch size for both actor and critic')
-    parser.add_argument('--tau', default=0.005, help='Target network update rate')
-    parser.add_argument('--policy-noise', default=0.2, help='Noise added to target policy during critic update')
-    parser.add_argument('--noise-clip', default=0.5, help='Range to clip target policy noise')
-    parser.add_argument('--policy-freq', default=2, type=int, help='Frequency of delayed policy updates')
+    parser.add_argument('--test-iters', default=10, type=float,
+                        help='How often (episodes) to test and save best')
+    parser.add_argument('--eval-episodes', default=10, type=float,
+                        help='How many episodes to evaluate for average')
+    hlp = 'Epsiodes during which initial random policy is used'
+    parser.add_argument('--start-episodes', default=125, type=int, help=hlp)
+    parser.add_argument('--expl-noise', default=0.1,
+                        help='Std of Gaussian exploration noise')
+    parser.add_argument('--batch-size', default=256, type=int,
+                        help='Batch size for both actor and critic')
+    parser.add_argument('--tau', default=0.005,
+                        help='Target network update rate')
+    hlp = 'Noise added to target policy during critic update'
+    parser.add_argument('--policy-noise', default=0.2, help=hlp)
+    parser.add_argument('--noise-clip', default=0.5,
+                        help='Range to clip target policy noise')
+    parser.add_argument('--policy-freq', default=2, type=int,
+                        help='Frequency of delayed policy updates')
     args = parser.parse_args()
 
     os.makedirs('./runs', exist_ok=True)
@@ -82,12 +99,15 @@ def main():
         else:
             action = (
                     policy.select_action(np.array(state))
-                    + np.random.normal(0, max_action * args.expl_noise, size=action_dim)
+                    + np.random.normal(0, max_action * args.expl_noise,
+                                       size=action_dim)
                     ).clip(-max_action, max_action)
 
         # Perform action
-        next_state, reward, done, _ = env.step(action) 
-        done_bool = float(done) if episode_timesteps < env._max_episode_steps else 0
+        next_state, reward, done, _ = env.step(action)
+        done_bool = (float(done)
+                     if episode_timesteps < env._max_episode_steps
+                     else 0)
 
         # Store data in replay buffer
         replay_buffer.add(state, action, next_state, reward, done_bool)
@@ -99,26 +119,27 @@ def main():
         if episode_index >= args.start_episodes:
             policy.train(replay_buffer, args.batch_size)
 
-        if done: 
+        if done:
 
-            if episode_timesteps>1 and episode_index >= args.start_episodes:
+            if episode_timesteps > 1 and episode_index >= args.start_episodes:
                 if first:
                     print('Starting training ...')
                     first = False
-                print('Episode %07d:\treward = %+.3f,\tsteps = %d' % (report_index+1, episode_reward, episode_timesteps))
+                print('Episode %07d:\treward = %+.3f,\tsteps = %d' %
+                      (report_index+1, episode_reward, episode_timesteps))
                 report_index += 1
 
             # Reset everything
             state, done = env.reset(), False
             episode_reward = 0
             episode_timesteps = 0
-            episode_index += 1 
+            episode_index += 1
 
-        evaluations.append((episode_index+1,episode_reward))
+        evaluations.append((episode_index+1, episode_reward))
 
         # Evaluate episode
         test_index = episode_index - args.start_episodes
-        if test_index > 0 and test_index%test_iters == 0:
+        if test_index > 0 and test_index % test_iters == 0:
 
             testing = test_index != args.test_iters+1
 
@@ -127,14 +148,16 @@ def main():
 
             test_iters = args.test_iters+1
 
-            avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+            avg_reward, _ = eval_policy(policy, env, args.eval_episodes)
 
             if testing:
                 print('reward = %+.3f' % avg_reward)
 
-            if args.checkpoint and (best_reward is None or best_reward < avg_reward):
+            if (args.checkpoint and (best_reward is None or
+                                     best_reward < avg_reward)):
                 if best_reward is not None:
-                    print('\n* Best reward updated: %+.3f -> %+.3f *\n' % (best_reward, avg_reward))
+                    print('\n* Best reward updated: %+.3f -> %+.3f *\n' %
+                          (best_reward, avg_reward))
                     _save(args, avg_reward, evaluations, policy)
                 best_reward = avg_reward
 
@@ -143,7 +166,8 @@ def main():
                 break
 
     # Save final net
-    avg_reward,_ = eval_policy(policy, env, args.eval_episodes)
+    avg_reward, _ = eval_policy(policy, env, args.eval_episodes)
     _save(args, avg_reward, evaluations, policy)
+
 
 main()
