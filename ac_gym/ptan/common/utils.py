@@ -10,9 +10,9 @@ import torch.nn as nn
 
 
 class SMAQueue:
-    """
+    '''
     Queue of fixed size with mean, max, min operations
-    """
+    '''
     def __init__(self, size):
         self.queue = collections.deque()
         self.size = size
@@ -30,10 +30,10 @@ class SMAQueue:
         return len(self.queue)
 
     def __repr__(self):
-        return "SMAQueue(size=%d)" % self.size
+        return 'SMAQueue(size=%d)' % self.size
 
     def __str__(self):
-        return "SMAQueue(size=%d, len=%d)" % (self.size, len(self.queue))
+        return 'SMAQueue(size=%d, len=%d)' % (self.size, len(self.queue))
 
     def min(self):
         if not self.queue:
@@ -73,17 +73,17 @@ class SpeedMonitor:
         self.epoches = 0
 
     def seconds(self):
-        """
+        '''
         Seconds since last reset
         :return:
-        """
+        '''
         return time.time() - self.start_ts
 
     def samples_per_sec(self):
-        """
+        '''
         Calculate samples per second since last reset() call
         :return: float count samples per second or None if not started
-        """
+        '''
         if self.start_ts is None:
             return None
         secs = self.seconds()
@@ -92,10 +92,10 @@ class SpeedMonitor:
         return (self.batches + 1) * self.batch_size / secs
 
     def epoch_time(self):
-        """
+        '''
         Calculate average epoch time
         :return: timedelta object
-        """
+        '''
         if self.start_ts is None:
             return None
         s = self.seconds()
@@ -104,10 +104,10 @@ class SpeedMonitor:
         return timedelta(seconds=s)
 
     def batch_time(self):
-        """
+        '''
         Calculate average batch time
         :return: timedelta object
-        """
+        '''
         if self.start_ts is None:
             return None
         s = self.seconds()
@@ -136,7 +136,7 @@ class WeightedMSELoss(nn.Module):
 
 class SegmentTree(object):
     def __init__(self, capacity, operation, neutral_element):
-        """Build a Segment Tree data structure.
+        '''Build a Segment Tree data structure.
 
         https://en.wikipedia.org/wiki/Segment_tree
 
@@ -161,8 +161,9 @@ class SegmentTree(object):
         neutral_element: obj
             neutral element for the operation above. eg. float('-inf')
             for max and 0 for sum.
-        """
-        assert capacity > 0 and capacity & (capacity - 1) == 0, "capacity must be positive and a power of 2."
+        '''
+        assert capacity > 0 and capacity & (capacity - 1) == 0, \
+               'capacity must be positive and a power of 2.'
         self._capacity = capacity
         self._value = [neutral_element for _ in range(2 * capacity)]
         self._operation = operation
@@ -175,18 +176,26 @@ class SegmentTree(object):
             return self._reduce_helper(start, end, 2 * node, node_start, mid)
         else:
             if mid + 1 <= start:
-                return self._reduce_helper(start, end, 2 * node + 1, mid + 1, node_end)
+                return self._reduce_helper(start,
+                                           end, 2 * node + 1,
+                                           mid + 1,
+                                           node_end)
             else:
                 return self._operation(
                     self._reduce_helper(start, mid, 2 * node, node_start, mid),
-                    self._reduce_helper(mid + 1, end, 2 * node + 1, mid + 1, node_end)
+                    self._reduce_helper(mid + 1,
+                                        end,
+                                        2 * node + 1,
+                                        mid + 1,
+                                        node_end)
                 )
 
     def reduce(self, start=0, end=None):
-        """Returns result of applying `self.operation`
+        '''Returns result of applying `self.operation`
         to a contiguous subsequence of the array.
 
-            self.operation(arr[start], operation(arr[start+1], operation(... arr[end])))
+            self.operation(arr[start],
+            operation(arr[start+1], operation(... arr[end])))
 
         Parameters
         ----------
@@ -198,8 +207,8 @@ class SegmentTree(object):
         Returns
         -------
         reduced: obj
-            result of reducing self.operation over the specified range of array elements.
-        """
+            result of reducing self.operation over the specified range of
+            array elements.  '''
         if end is None:
             end = self._capacity
         if end < 0:
@@ -233,11 +242,11 @@ class SumSegmentTree(SegmentTree):
         )
 
     def sum(self, start=0, end=None):
-        """Returns arr[start] + ... + arr[end]"""
+        '''Returns arr[start] + ... + arr[end]'''
         return super(SumSegmentTree, self).reduce(start, end)
 
     def find_prefixsum_idx(self, prefixsum):
-        """Find the highest index `i` in the array such that
+        '''Find the highest index `i` in the array such that
             sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum
 
         if array values are probabilities, this function
@@ -253,7 +262,7 @@ class SumSegmentTree(SegmentTree):
         -------
         idx: int
             highest index satisfying the prefixsum constraint
-        """
+        '''
         assert 0 <= prefixsum <= self.sum() + 1e-5
         idx = 1
         while idx < self._capacity:  # while non-leaf
@@ -274,21 +283,21 @@ class MinSegmentTree(SegmentTree):
         )
 
     def min(self, start=0, end=None):
-        """Returns min(arr[start], ...,  arr[end])"""
+        '''Returns min(arr[start], ...,  arr[end])'''
 
         return super(MinSegmentTree, self).reduce(start, end)
 
 
 class TBMeanTracker:
-    """
-    TensorBoard value tracker: allows to batch fixed amount of historical values and write their mean into TB
-
+    '''
+    TensorBoard value tracker: allows to batch fixed amount of historical
+    values and write their mean into TB
     Designed and tested with pytorch-tensorboard in mind
-    """
+    '''
     def __init__(self, batch_size=100):
-        """
+        '''
         :param batch_size: integer size of batch to track
-        """
+        '''
         assert isinstance(batch_size, int)
         self.batch_size = batch_size
 
@@ -301,7 +310,8 @@ class TBMeanTracker:
 
     @staticmethod
     def _as_float(value):
-        assert isinstance(value, (float, int, np.ndarray, np.generic, torch.autograd.Variable)) or torch.is_tensor(value)
+        legit = float, int, np.ndarray, np.generic, torch.autograd.Variable
+        assert isinstance(value, legit) or torch.is_tensor(value)
         tensor_val = None
         if isinstance(value, torch.autograd.Variable):
             tensor_val = value.data
@@ -328,10 +338,10 @@ class TBMeanTracker:
 
 class RewardTracker:
     def __init__(self, min_ts_diff=1.0):
-        """
+        '''
         Constructs RewardTracker
         :param min_ts_diff: minimal time difference to track speed
-        """
+        '''
         self.min_ts_diff = min_ts_diff
 
     def __enter__(self):
@@ -351,9 +361,12 @@ class RewardTracker:
             speed = (frame - self.ts_frame) / ts_diff
             self.ts_frame = frame
             self.ts = time.time()
-            epsilon_str = "" if epsilon is None else ", eps %.2f" % epsilon
-            print("%05d: done %05d episodes, mean reward %.3f, speed %.2f f/s%s" % (
-                frame, len(self.total_rewards), mean_reward, speed, epsilon_str
-            ))
+            epsilon_str = '' if epsilon is None else ', eps %.2f' % epsilon
+            print('%05d: %05d episodes, mean reward %.3f, speed %.2f f/s%s' %
+                  (frame,
+                   len(self.total_rewards),
+                   mean_reward,
+                   speed,
+                   epsilon_str))
             sys.stdout.flush()
         return mean_reward if len(self.total_rewards) > 30 else None
