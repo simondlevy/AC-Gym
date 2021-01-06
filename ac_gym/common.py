@@ -4,13 +4,14 @@ import torch.distributions as distr
 
 from ac_gym import ptan
 
-def unpack_batch_a2c(batch, net, last_val_gamma, device="cpu"):
-    """
+
+def unpack_batch_a2c(batch, net, last_val_gamma, device='cpu'):
+    '''
     Convert batch into training tensors
     :param batch:
     :param net:
     :return: states variable, actions tensor, reference values variable
-    """
+    '''
     states = []
     actions = []
     rewards = []
@@ -41,10 +42,10 @@ def unpack_batch_a2c(batch, net, last_val_gamma, device="cpu"):
 @torch.no_grad()
 def unpack_batch_sac(batch, val_net, twinq_net, policy_net,
                      gamma: float, ent_alpha: float,
-                     device="cpu"):
-    """
+                     device='cpu'):
+    '''
     Unpack Soft Actor-Critic batch
-    """
+    '''
     states_v, actions_v, ref_q_v = \
         unpack_batch_a2c(batch, val_net, gamma, device)
 
@@ -54,7 +55,6 @@ def unpack_batch_sac(batch, val_net, twinq_net, policy_net,
     acts_v = act_dist.sample()
     q1_v, q2_v = twinq_net(states_v, acts_v)
     # element-wise minimum
-    ref_vals_v = torch.min(q1_v, q2_v).squeeze() - \
-                 ent_alpha * act_dist.log_prob(acts_v).sum(dim=1)
+    ref_vals_v = (torch.min(q1_v, q2_v).squeeze() -
+                  ent_alpha * act_dist.log_prob(acts_v).sum(dim=1))
     return states_v, actions_v, ref_vals_v, ref_q_v
-
