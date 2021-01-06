@@ -11,6 +11,7 @@ from ac_gym.td3 import TD3, eval_policy
 import numpy as np
 import torch
 
+
 def run_td3(parts, env, nhid, nodisplay):
 
     policy = TD3(
@@ -23,9 +24,12 @@ def run_td3(parts, env, nhid, nodisplay):
 
     return eval_policy(policy, env, render=(not nodisplay), eval_episodes=1)
 
+
 def run_other(parts, env, nhid, nodisplay):
 
-    net = model.ModelActor(env.observation_space.shape[0], env.action_space.shape[0], nhid)
+    net = model.ModelActor(env.observation_space.shape[0],
+                           env.action_space.shape[0],
+                           nhid)
 
     net.load_state_dict(parts)
 
@@ -38,7 +42,7 @@ def run_other(parts, env, nhid, nodisplay):
         mu_v = net(obs_v)
         action = mu_v.squeeze(dim=0).data.numpy()
         action = np.clip(action, -1, 1)
-        if np.isscalar(action): 
+        if np.isscalar(action):
             action = [action]
         obs, reward, done, _ = env.step(action)
         if not nodisplay:
@@ -54,11 +58,15 @@ def run_other(parts, env, nhid, nodisplay):
 
 def main():
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    fmtr = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=fmtr)
     parser.add_argument('filename', metavar='FILENAME', help='.dat input file')
-    parser.add_argument('--record', default=None, help='If specified, sets the recording dir')
-    parser.add_argument('--nodisplay', dest='nodisplay', action='store_true', help='Suppress display')
-    parser.add_argument('--seed', default=None, type=int, help='Sets Gym, PyTorch and Numpy seeds')
+    parser.add_argument('--record', default=None,
+                        help='If specified, sets the recording dir')
+    parser.add_argument('--nodisplay', dest='nodisplay', action='store_true',
+                        help='Suppress display')
+    parser.add_argument('--seed', default=None, type=int,
+                        help='Sets Gym, PyTorch and Numpy seeds')
     args = parser.parse_args()
 
     parts, env_name, nhid = torch.load(open(args.filename, 'rb'))
@@ -80,6 +88,7 @@ def main():
     print('In %d steps we got %.3f reward.' % (steps, reward))
 
     env.close()
+
 
 if __name__ == '__main__':
     main()
