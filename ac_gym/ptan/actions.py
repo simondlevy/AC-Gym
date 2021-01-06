@@ -3,17 +3,17 @@ from typing import Union
 
 
 class ActionSelector:
-    """
+    '''
     Abstract class which converts scores to the actions
-    """
+    '''
     def __call__(self, scores):
         raise NotImplementedError
 
 
 class ArgmaxActionSelector(ActionSelector):
-    """
+    '''
     Selects actions using argmax
-    """
+    '''
     def __call__(self, scores):
         assert isinstance(scores, np.ndarray)
         return np.argmax(scores, axis=1)
@@ -22,7 +22,9 @@ class ArgmaxActionSelector(ActionSelector):
 class EpsilonGreedyActionSelector(ActionSelector):
     def __init__(self, epsilon=0.05, selector=None):
         self.epsilon = epsilon
-        self.selector = selector if selector is not None else ArgmaxActionSelector()
+        self.selector = (selector
+                         if selector is not None
+                         else ArgmaxActionSelector())
 
     def __call__(self, scores):
         assert isinstance(scores, np.ndarray)
@@ -35,9 +37,9 @@ class EpsilonGreedyActionSelector(ActionSelector):
 
 
 class ProbabilityActionSelector(ActionSelector):
-    """
+    '''
     Converts probabilities of actions into action by sampling them
-    """
+    '''
     def __call__(self, probs):
         assert isinstance(probs, np.ndarray)
         actions = []
@@ -47,9 +49,9 @@ class ProbabilityActionSelector(ActionSelector):
 
 
 class EpsilonTracker:
-    """
+    '''
     Updates epsilon according to linear schedule
-    """
+    '''
     def __init__(self, selector: EpsilonGreedyActionSelector,
                  eps_start: Union[int, float],
                  eps_final: Union[int, float],
