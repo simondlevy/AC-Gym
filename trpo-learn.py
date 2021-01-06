@@ -6,6 +6,7 @@ from ac_gym import Solver, ptan, model, trpo, calc_logprob, make_learn_parser
 import torch
 import torch.nn.functional as F
 
+
 class TRPO(Solver):
 
     def __init__(self, args):
@@ -16,15 +17,15 @@ class TRPO(Solver):
 
         agent = model.AgentA2C(self.net_act, device=self.device)
 
-        self.exp_source = ptan.experience.ExperienceSource(env, agent, steps_count=1)
-
+        self.exp_source = ptan.experience.ExperienceSource(env,
+                                                           agent,
+                                                           steps_count=1)
         self.trajectory = []
 
-        self.traj_size  = args.traj_size
-        self.maxkl      = args.maxkl 
-        self.damping    = args.damping
-        self.gae_lambda = args.gae_lambda 
-
+        self.traj_size = args.traj_size
+        self.maxkl = args.maxkl
+        self.damping = args.damping
+        self.gae_lambda = args.gae_lambda
 
     def update(self, exp):
 
@@ -41,9 +42,11 @@ class TRPO(Solver):
         old_logprob_v = calc_logprob(mu_v, self.net_act.logstd, traj_actions_v)
 
         # normalize advantages
-        traj_adv_v = (traj_adv_v - torch.mean(traj_adv_v)) / torch.std(traj_adv_v)
+        traj_adv_v = ((traj_adv_v - torch.mean(traj_adv_v)) /
+                      torch.std(traj_adv_v))
 
-        # drop last entry from the trajectory, an our adv and ref value calculated without it
+        # drop last entry from the trajectory, an our adv and ref value
+        # calculated without it
         self.trajectory = self.trajectory[:-1]
         old_logprob_v = old_logprob_v[:-1].detach()
         traj_states_v = traj_states_v[:-1]
@@ -73,11 +76,16 @@ class TRPO(Solver):
             std_v = torch.exp(logstd_v)
             std0_v = std_v.detach()
             v = (std0_v ** 2 + (mu0_v - mu_v) ** 2) / \
-                    (2.0 * std_v ** 2)
+                (2.0 * std_v ** 2)
             kl = logstd_v - logstd0_v + v - 0.5
             return kl.sum(1, keepdim=True)
 
-        trpo.trpo_step(self.net_act, get_loss, get_kl, self.maxkl, self.damping, device=self.device)
+        trpo.trpo_step(self.net_act,
+                       get_loss,
+                       get_kl,
+                       self.maxkl,
+                       self.damping,
+                       device=self.device)
 
         self.trajectory.clear()
 
@@ -98,7 +106,9 @@ class TRPO(Solver):
         last_gae = 0.0
         result_adv = []
         result_ref = []
-        for val, next_val, (exp,) in zip(reversed(values[:-1]), reversed(values[1:]), reversed(self.trajectory[:-1])):
+        for val, next_val, (exp,) in zip(reversed(values[:-1]),
+                                         reversed(values[1:]),
+                                         reversed(self.trajectory[:-1])):
             if exp.done:
                 delta = exp.reward - val
                 last_gae = delta
@@ -112,19 +122,24 @@ class TRPO(Solver):
         ref_v = torch.FloatTensor(list(reversed(result_ref))).to(self.device)
         return adv_v, ref_v
 
+
 def main():
 
     parser = make_learn_parser()
 
-    parser.add_argument('--lr-critic', default=1e-3, type=float, help='Critic learning rate')
-    parser.add_argument('--maxkl', default=0.01, type=float, help='Maximum KL divergence')
+    parser.add_argument('--lr-critic', default=1e-3, type=float,
+                        help='Critic learning rate')
+    parser.add_argument('--maxkl', default=0.01, type=float,
+                        help='Maximum KL divergence')
     parser.add_argument('--damping', default=0.1, type=float, help='Damping')
-    parser.add_argument('--gae-lambda', default=0.95, type=float, help='Lambda for Generalized Advantage Estimation')
-    parser.add_argument('--traj-size', default=2049, type=int, help='Trajectory size')
+    parser.add_argument('--gae-lambda', default=0.95, type=float,
+                        help='Lambda for Generalized Advantage Estimation')
+    parser.add_argument('--traj-size', default=2049, type=int,
+                        help='Trajectory size')
 
     args = parser.parse_args()
 
     TRPO(args).loop()
 
-main()
 
+main()
