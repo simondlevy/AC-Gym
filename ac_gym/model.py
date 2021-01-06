@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+
 class ModelActor(nn.Module):
     def __init__(self, obs_size, act_size, hid_size):
         super(ModelActor, self).__init__()
