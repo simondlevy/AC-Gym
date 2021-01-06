@@ -1,4 +1,5 @@
-# Code taken here https://github.com/ikostrikov/pytorch-a2c-ppo-acktr/blob/master/kfac.py (with minor modifications)
+# https://github.com/ikostrikov/pytorch-a2c-ppo-acktr/blob/master/kfac.py
+# (with minor modifications)
 import math
 
 import torch
@@ -191,8 +192,9 @@ class KFACOptimizer(optim.Optimizer):
         for module in self.model.modules():
             classname = module.__class__.__name__
             if classname in self.known_modules:
-                assert not ((classname in ['Linear', 'Conv2d']) and module.bias is not None), \
-                                    "You must have a bias as a separate layer"
+                assert not ((classname in ['Linear', 'Conv2d'])
+                            and module.bias is not None), \
+                            'You must have a bias as a separate layer'
 
                 self.modules.append(module)
                 module.register_forward_pre_hook(self._save_input)
@@ -207,7 +209,7 @@ class KFACOptimizer(optim.Optimizer):
         updates = {}
         for i, m in enumerate(self.modules):
             assert len(list(m.parameters())
-                       ) == 1, "Can handle only one parameter at the moment"
+                       ) == 1, 'Can handle only one parameter at the moment'
             classname = m.__class__.__name__
             p = next(m.parameters())
 
@@ -240,7 +242,6 @@ class KFACOptimizer(optim.Optimizer):
         vg_sum = 0
         for p in self.model.parameters():
             if p not in updates:
-#                print("Not found in updates: %s" % p)
                 continue
             v = updates[p]
             vg_sum += (v * p.grad.data * self.lr * self.lr).sum()
@@ -249,7 +250,6 @@ class KFACOptimizer(optim.Optimizer):
 
         for p in self.model.parameters():
             if p not in updates:
-#                print("Not found in updates: %s" % p)
                 continue
             v = updates[p]
             p.grad.data.copy_(v)
