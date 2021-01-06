@@ -2,9 +2,12 @@
 import gym
 
 from ac_gym import Solver, ptan, model, common, make_learn_parser
+from ac_gym.ptan.experience import ExperienceSourceFirstLast
+from ac_gym.ptan.experience import ExperienceReplayBuffer
 
 import torch.optim as optim
 import torch.nn.functional as F
+
 
 class SAC(Solver):
 
@@ -16,20 +19,26 @@ class SAC(Solver):
 
         agent = model.AgentDDPG(self.net_act, device=self.device)
 
-        self.exp_source = ptan.experience.ExperienceSourceFirstLast(env, agent, gamma=args.gamma, steps_count=1)
+        self.exp_source = ExperienceSourceFirstLast(env,
+                                                    agent,
+                                                    gamma=args.gamma,
+                                                    steps_count=1)
 
-        self.twinq_net = model.ModelSACTwinQ(env.observation_space.shape[0], env.action_space.shape[0]).to(self.device)
+        self.twinq_net = (model.ModelSACTwinQ(env.observation_space.shape[0],
+                          env.action_space.shape[0]).to(self.device))
 
         self.tgt_net_crt = ptan.agent.TargetNet(self.net_crt)
 
-        self.buffer = ptan.experience.ExperienceReplayBuffer(self.exp_source, buffer_size=args.replay_size)
+        bs = args.replay_size
+        self.buffer = ExperienceReplayBuffer(self.exp_source, buffer_size=bs)
         self.act_opt = optim.Adam(self.net_act.parameters(), lr=args.lr_actor)
-        self.twinq_opt = optim.Adam(self.twinq_net.parameters(), lr=args.lr_critic)
+        self.twinq_opt = optim.Adam(self.twinq_net.parameters(),
+                                    lr=args.lr_critic)
 
-        self.replay_size    = args.replay_size
+        self.replay_size = args.replay_size
         self.replay_initial = args.replay_initial
-        self.batch_size     = args.batch_size
-        self.entropy_alpha  = args.entropy_alpha
+        self.batch_size = args.batch_size
+        self.entropy_alpha = args.entropy_alpha
 
     def update(self, exp):
 
@@ -78,19 +87,27 @@ class SAC(Solver):
 
         return net
 
+
 def main():
 
     parser = make_learn_parser()
 
-    parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
-    parser.add_argument('--lr-actor', default=1e-4, type=float, help='Learning rate for actor')
-    parser.add_argument('--lr-critic', default=1e-4, type=float, help='Learning rate for values')
-    parser.add_argument('--replay-size', default=100000, type=int, help='Replay size')
-    parser.add_argument('--replay-initial', default=10000, type=int, help='Initial replay size')
-    parser.add_argument('--entropy-alpha', default=0.1, type=float, help='Entropy alpha')
+    parser.add_argument('--batch-size', default=64, type=int,
+                        help='Batch size')
+    parser.add_argument('--lr-actor', default=1e-4, type=float,
+                        help='Learning rate for actor')
+    parser.add_argument('--lr-critic', default=1e-4, type=float,
+                        help='Learning rate for values')
+    parser.add_argument('--replay-size', default=100000, type=int,
+                        help='Replay size')
+    parser.add_argument('--replay-initial', default=10000, type=int,
+                        help='Initial replay size')
+    parser.add_argument('--entropy-alpha', default=0.1, type=float,
+                        help='Entropy alpha')
 
     args = parser.parse_args()
 
     SAC(args).loop()
+
 
 main()
