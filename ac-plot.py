@@ -10,13 +10,8 @@ args = parser.parse_args()
 
 a = np.load(args.filename)
 
-plt.plot(a[:,0], a[:,1])
+plt.plot(a[:, 0], a[:, 1])
 plt.xlabel('Episode')
 plt.ylabel('Reward')
 plt.title(args.filename)
 plt.show()
-
-
-
-
-
