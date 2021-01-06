@@ -4,13 +4,13 @@ import configparser
 
 
 class RunFile(configparser.ConfigParser):
-    TWEAK_FILE = "tweak.ini"
+    TWEAK_FILE = 'tweak.ini'
 
-    logger = log.getLogger("RunFile")
+    logger = log.getLogger('RunFile')
 
-    """
+    '''
     Configuration for the run with way to reload options.
-    """
+    '''
     def __init__(self, file_name):
         super(RunFile, self).__init__()
         if not self.read(file_name):
@@ -31,11 +31,13 @@ class RunFile(configparser.ConfigParser):
         return []
 
     def _merge_tweak_file(self, file_name):
-        """
-        Reads and merges config file, returning list of (section, name) tuples which were updated
-        :param file_name: 
-        :return: None if nothing was updated, or list of tuples (section, name) of changed options
-        """
+        '''
+        Reads and merges config file, returning list of (section, name) tuples
+        which were updated
+        :param file_name:
+        :return: None if nothing was updated, or list of tuples (section,
+        name) of changed options
+        '''
         updated = []
         c = configparser.ConfigParser()
         if not c.read(file_name):
@@ -43,7 +45,8 @@ class RunFile(configparser.ConfigParser):
         for s in c.sections():
             for k in c[s].keys():
                 if k not in self[s].keys():
-                    self.logger.warning("Tweak file contains unknown option %s in section %s", k, s)
+                    msg = 'Tweak file contains unknown option %s in section %s'
+                    self.logger.warning(msg % (k, s))
                 else:
                     if c[s][k] != self[s][k]:
                         updated.append((s, k))
@@ -52,10 +55,8 @@ class RunFile(configparser.ConfigParser):
 
     @property
     def tweak_file_enabled(self):
-        return self.getboolean("defaults", "tweak_file", fallback=False)
+        return self.getboolean('defaults', 'tweak_file', fallback=False)
 
     @property
     def cuda_enabled(self):
-        return self.getboolean("defaults", "cuda", fallback=False)
-
-
+        return self.getboolean('defaults', 'cuda', fallback=False)
