@@ -44,10 +44,9 @@ class Solver:
         maxeps = np.inf if self.maxeps is None else self.maxeps
 
         best_reward = None
-
         rewards_steps = None
-
         history = []
+        total_evaluations = 0
 
         for episode_idx, exp in enumerate(self.exp_source):
 
@@ -66,6 +65,7 @@ class Solver:
                                          device=self.device)
                 print('Episode %07d:\treward = %+.3f,\tevaluations = %d' %
                       (episode_idx, reward, steps))
+                total_evaluations += steps
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
                 history.append((episode_idx+1, reward))
                 if (self.checkpoint and (best_reward is None or
@@ -92,6 +92,8 @@ class Solver:
                              device=self.device)
         model_fname = self.models_path + ('%+010.3f.dat' % reward)
         self._save(model_fname)
+
+        print('Total evaluations = %d' % total_evaluations)
 
     def _save(self, model_fname):
 
