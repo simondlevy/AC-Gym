@@ -80,10 +80,11 @@ def main():
 
     state, done = env.reset(), False
     episode_reward = 0
-    episode_timesteps = 0
+    episode_evaluations = 0
     episode_index = 0
     best_reward = None
     report_index = 0
+    total_evaluations = 0
     test_iters = args.test_iters
     first = True
 
@@ -91,7 +92,7 @@ def main():
 
     while report_index < args.maxeps:
 
-        episode_timesteps += 1
+        episode_evaluations += 1
 
         # Select action randomly or according to policy
         if episode_index < args.start_episodes:
@@ -106,7 +107,7 @@ def main():
         # Perform action
         next_state, reward, done, _ = env.step(action)
         done_bool = (float(done)
-                     if episode_timesteps < env._max_episode_steps
+                     if episode_evaluations < env._max_episode_steps
                      else 0)
 
         # Store data in replay buffer
@@ -121,18 +122,19 @@ def main():
 
         if done:
 
-            if episode_timesteps > 1 and episode_index >= args.start_episodes:
+            if episode_evaluations > 1 and episode_index >= args.start_episodes:
                 if first:
                     print('Starting training ...')
                     first = False
-                print('Episode %07d:\treward = %+.3f,\tsteps = %d' %
-                      (report_index+1, episode_reward, episode_timesteps))
+                print('Episode %07d:\treward = %+.3f,\tevaluations = %d' %
+                      (report_index+1, episode_reward, episode_evaluations))
                 report_index += 1
+                total_evaluations += episode_evaluations
 
             # Reset everything
             state, done = env.reset(), False
             episode_reward = 0
-            episode_timesteps = 0
+            episode_evaluations = 0
             episode_index += 1
 
         evaluations.append((episode_index+1, episode_reward))
@@ -164,6 +166,8 @@ def main():
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
+
+    print('Total evaluations = %d' % total_evaluations) 
 
     # Save final net
     avg_reward, _ = eval_policy(policy, env, args.eval_episodes)
