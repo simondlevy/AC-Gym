@@ -2,9 +2,9 @@
 import math
 
 from ac_gym import Solver, model, common, kfac, calc_logprob, make_learn_parser
+from ac_gym import gym_make
 from ac_gym.ptan.experience import ExperienceSourceFirstLast
 
-import gym
 import torch
 import torch.nn.functional as F
 
@@ -13,7 +13,7 @@ class ACKTR(Solver):
 
     def __init__(self, args):
 
-        envs = [gym.make(args.env) for _ in range(args.envs_count)]
+        envs = [gym_make(args.env) for _ in range(args.envs_count)]
 
         Solver.__init__(self, args, 'acktr')
 

@@ -147,6 +147,21 @@ def test_net(net, env, count=10, device='cpu'):
     return rewards / count, steps / count
 
 
+def gym_make(envname):
+
+    env = None
+
+    try:
+        env = gym.make(envname)
+
+    except Exception as e:
+        print('Unable to make environment %s: %s' %
+              (envname, e))
+        exit(1)
+
+    return env
+
+
 def calc_logprob(mu_v, logstd_v, actions_v):
     p1 = - ((mu_v - actions_v) ** 2) / (2*torch.exp(logstd_v).clamp(min=1e-3))
     p2 = - torch.log(torch.sqrt(2 * np.pi * torch.exp(logstd_v)))

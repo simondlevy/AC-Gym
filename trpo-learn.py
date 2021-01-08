@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import gym
 
 from ac_gym import Solver, ptan, model, trpo, calc_logprob, make_learn_parser
+from ac_gym import gym_make
 
 import torch
 import torch.nn.functional as F
@@ -11,7 +11,7 @@ class TRPO(Solver):
 
     def __init__(self, args):
 
-        env = gym.make(args.env)
+        env = gym_make(args.env)
 
         Solver.__init__(self, args, 'trpo')
 

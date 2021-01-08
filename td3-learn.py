@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import numpy as np
 import torch
-import gym
 import argparse
 import os
 from sys import stdout
 
+from ac_gym import gym_make
 from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
 
@@ -55,7 +55,7 @@ def main():
     os.makedirs('./runs', exist_ok=True)
     os.makedirs('./models', exist_ok=True)
 
-    env = gym.make(args.env)
+    env = gym_make(args.env)
 
     max_action = float(env.action_space.high[0])
     state_dim = env.observation_space.shape[0]
@@ -74,7 +74,7 @@ def main():
 
     replay_buffer = ReplayBuffer(state_dim, action_dim)
 
-    env = gym.make(args.env)
+    env = gym_make(args.env)
 
     evaluations = []
 
@@ -122,7 +122,8 @@ def main():
 
         if done:
 
-            if episode_evaluations > 1 and episode_index >= args.start_episodes:
+            if (episode_evaluations > 1 and
+                    episode_index >= args.start_episodes):
                 if first:
                     print('Starting training ...')
                     first = False
@@ -167,7 +168,7 @@ def main():
                 print('Target average reward %f achieved' % args.target)
                 break
 
-    print('Total evaluations = %d' % total_evaluations) 
+    print('Total evaluations = %d' % total_evaluations)
 
     # Save final net
     avg_reward, _ = eval_policy(policy, env, args.eval_episodes)

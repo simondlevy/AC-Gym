@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import math
-import gym
 
-from ac_gym import Solver, model, common, calc_logprob, make_learn_parser
+from ac_gym import Solver, model, common, calc_logprob
+from ac_gym import gym_make, make_learn_parser
 from ac_gym.ptan.experience import ExperienceSourceFirstLast
 
 import torch
@@ -14,7 +14,7 @@ class A2C(Solver):
 
     def __init__(self, args):
 
-        envs = [gym.make(args.env) for _ in range(args.envs_count)]
+        envs = [gym_make(args.env) for _ in range(args.envs_count)]
 
         Solver.__init__(self, args, 'a2c')
 

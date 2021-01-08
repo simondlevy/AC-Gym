@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import gym
 
-from ac_gym import Solver, ptan, model, common, make_learn_parser
+from ac_gym import Solver, ptan, model, common, make_learn_parser, gym_make
 from ac_gym.ptan.experience import ExperienceSourceFirstLast
 from ac_gym.ptan.experience import ExperienceReplayBuffer
 
@@ -13,7 +12,7 @@ class SAC(Solver):
 
     def __init__(self, args):
 
-        env = gym.make(args.env)
+        env = gym_make(args.env)
 
         Solver.__init__(self, args, 'sac')
 

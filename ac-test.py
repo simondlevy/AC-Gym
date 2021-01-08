@@ -2,10 +2,9 @@
 import argparse
 import time
 
-import gym
 from gym import wrappers
 
-from ac_gym import model
+from ac_gym import model, gym_make
 from ac_gym.td3 import TD3, eval_policy
 
 import numpy as np
@@ -71,7 +70,7 @@ def main():
 
     parts, env_name, nhid = torch.load(open(args.filename, 'rb'))
 
-    env = gym.make(env_name)
+    env = gym_make(env_name)
 
     if args.seed is not None:
         env.seed(args.seed)
