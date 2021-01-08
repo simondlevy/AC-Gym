@@ -47,7 +47,7 @@ class Solver:
 
         rewards_steps = None
 
-        evaluations = []
+        history = []
 
         for episode_idx, exp in enumerate(self.exp_source):
 
@@ -67,7 +67,7 @@ class Solver:
                 print('Episode %07d:\treward = %+.3f,\tevaluations = %d' %
                       (episode_idx, reward, steps))
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
-                evaluations.append((episode_idx+1, reward))
+                history.append((episode_idx+1, reward))
                 if (self.checkpoint and (best_reward is None or
                                          best_reward < reward)):
                     if best_reward is not None:
@@ -85,7 +85,7 @@ class Solver:
 
         np.save(self.runs_path+(''
                                 if best_reward is None
-                                else ('%f' % best_reward)), evaluations)
+                                else ('%f' % best_reward)), history)
         reward, _ = test_net(self.net_act,
                              self.env,
                              self.eval_episodes,
