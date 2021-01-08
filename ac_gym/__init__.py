@@ -64,7 +64,7 @@ class Solver:
                                          self.env,
                                          self.eval_episodes,
                                          device=self.device)
-                print('Episode %07d:\treward = %+.3f,\tsteps = %d' %
+                print('Episode %07d:\treward = %+.3f,\tevaluations = %d' %
                       (episode_idx, reward, steps))
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
                 evaluations.append((episode_idx+1, reward))
