@@ -63,8 +63,9 @@ class Solver:
                                          self.env,
                                          self.eval_episodes,
                                          device=self.device)
-                print('Episode %07d:\treward = %+.3f,\tevaluations = %d' %
-                      (episode_idx, reward, steps))
+                print(('Episode %07d:\treward = %+.3f,' +
+                       '\tevaluations = %d\ttotal_evaluations=%d') %
+                      (episode_idx, reward, steps, total_evaluations))
                 total_evaluations += steps
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
                 history.append((episode_idx+1, reward))
@@ -92,8 +93,6 @@ class Solver:
                              device=self.device)
         model_fname = self.models_path + ('%+010.3f.dat' % reward)
         self._save(model_fname)
-
-        print('Total evaluations = %d' % total_evaluations)
 
     def _save(self, model_fname):
 

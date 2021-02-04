@@ -162,8 +162,8 @@ class SegmentTree(object):
             neutral element for the operation above. eg. float('-inf')
             for max and 0 for sum.
         '''
-        assert capacity > 0 and capacity & (capacity - 1) == 0, \
-               'capacity must be positive and a power of 2.'
+        assert capacity > 0 and capacity & (capacity - 1) == 0, (
+                'capacity must be positive and a power of 2.')
         self._capacity = capacity
         self._value = [neutral_element for _ in range(2 * capacity)]
         self._operation = operation

@@ -127,8 +127,13 @@ def main():
                 if first:
                     print('Starting training ...')
                     first = False
-                print('Episode %07d:\treward = %+.3f,\tevaluations = %d' %
-                      (report_index+1, episode_reward, episode_evaluations))
+                print(('Episode %07d:\treward = %+.3f,' +
+                       '\tevaluations this epsode= %d' +
+                       '\ttotal evaluations = %d') %
+                      (report_index+1,
+                       episode_reward,
+                       episode_evaluations,
+                       total_evaluations))
                 report_index += 1
                 total_evaluations += episode_evaluations
 
@@ -167,8 +172,6 @@ def main():
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
-
-    print('Total evaluations = %d' % total_evaluations)
 
     # Save final net
     avg_reward, _ = eval_policy(policy, env, args.eval_episodes)
