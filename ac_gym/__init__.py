@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import argparse
 import os
+from time import time
 import torch.optim as optim
 
 
@@ -47,6 +48,7 @@ class Solver:
         rewards_steps = None
         history = []
         total_evaluations = 0
+        start = time()
 
         for episode_idx, exp in enumerate(self.exp_source):
 
@@ -68,7 +70,7 @@ class Solver:
                       (episode_idx, reward, steps, total_evaluations))
                 total_evaluations += steps
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
-                history.append((episode_idx+1, reward))
+                history.append((episode_idx+1, time()-start, reward))
                 if (self.checkpoint and (best_reward is None or
                                          best_reward < reward)):
                     if best_reward is not None:
