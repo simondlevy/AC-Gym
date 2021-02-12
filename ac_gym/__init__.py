@@ -8,6 +8,13 @@ from time import time
 import torch.optim as optim
 
 
+def save_history(pathname, history):
+    with open(pathname, 'w') as csvfile:
+        csvfile.write('Iter,Time,Reward\n')
+        for row in history[:-1]:  # last reward is always zero
+            csvfile.write('%d,%f,%f\n' % (row[0], row[1], row[2]))
+
+
 class Solver:
 
     def __init__(self, args, algo_name):
@@ -86,9 +93,11 @@ class Solver:
 
             self.update(exp)
 
-        np.save(self.runs_path+(''
-                                if best_reward is None
-                                else ('%f' % best_reward)), history)
+        csvfilename = self.runs_path+(''
+                                      if best_reward is None
+                                      else ('%f' % best_reward))
+
+        save_history(csvfilename, history)
 
         reward, _ = test_net(self.net_act,
                              self.env,

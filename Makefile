@@ -2,7 +2,7 @@ install:
 	sudo python3 setup.py install
 
 clean:
-	sudo rm -rf build/ dist/ *.egg-info __pycache__ */__pycache__ models/ visuals/
+	sudo rm -rf build/ dist/ *.egg-info __pycache__ */__pycache__ models/ visuals/ runs/
 
 commit:
 	git commit -a
