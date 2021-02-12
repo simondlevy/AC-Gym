@@ -10,7 +10,7 @@ from ac_gym import gym_make
 from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
 
-def _save(args, avg_reward, evaluations, policy):
+def _save(args, avg_reward, history, policy):
 
     stdout.flush()
 
@@ -19,7 +19,7 @@ def _save(args, avg_reward, evaluations, policy):
     # Save run to CSV file
     with open('./runs/' + filename + '.csv', 'w') as csvfile:
         csvfile.write('Iter,Time,Reward\n')
-        for row in evaluations[:-1]:  # last eval is always zero
+        for row in history[:-1]:  # last reward is always zero
             csvfile.write('%d,%f,%f\n' % (row[0], row[1], row[2]))
 
     # Save network
@@ -86,7 +86,7 @@ def main():
 
     env = gym_make(args.env)
 
-    evaluations = []
+    history = []
 
     state, done = env.reset(), False
     episode_reward = 0
@@ -155,7 +155,7 @@ def main():
             episode_evaluations = 0
             episode_index += 1
 
-        evaluations.append((episode_index+1, time()-start, episode_reward))
+        history.append((episode_index+1, time()-start, episode_reward))
 
         # Evaluate episode
         test_index = episode_index - args.start_episodes
@@ -178,7 +178,7 @@ def main():
                 if best_reward is not None:
                     print('\n* Best reward updated: %+.3f -> %+.3f *\n' %
                           (best_reward, avg_reward))
-                    _save(args, avg_reward, evaluations, policy)
+                    _save(args, avg_reward, history, policy)
                 best_reward = avg_reward
 
             if avg_reward >= args.target:
@@ -187,7 +187,7 @@ def main():
 
     # Save final net
     avg_reward, _ = eval_policy(policy, env, args.eval_episodes)
-    _save(args, avg_reward, evaluations, policy)
+    _save(args, avg_reward, history, policy)
 
 
 main()

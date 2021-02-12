@@ -87,6 +87,7 @@ class Solver:
         np.save(self.runs_path+(''
                                 if best_reward is None
                                 else ('%f' % best_reward)), history)
+
         reward, _ = test_net(self.net_act,
                              self.env,
                              self.eval_episodes,
