@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import argparse
 import os
+from time import time
 import torch.optim as optim
 
 
@@ -47,6 +48,7 @@ class Solver:
         rewards_steps = None
         history = []
         total_evaluations = 0
+        start = time()
 
         for episode_idx, exp in enumerate(self.exp_source):
 
@@ -68,36 +70,47 @@ class Solver:
                       (episode_idx, reward, steps, total_evaluations))
                 total_evaluations += steps
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
-                history.append((episode_idx+1, reward))
+                history.append((episode_idx+1, time()-start, reward))
                 if (self.checkpoint and (best_reward is None or
                                          best_reward < reward)):
                     if best_reward is not None:
                         print('\n* Best reward updated: %+.3f -> %+.3f *\n' %
                               (best_reward, reward))
-                        self._save(model_fname)
+                        self._save_model(model_fname)
+                        csvfilename = self.runs_path+('%f' % best_reward)
+                        self._save_history(csvfilename, history)
                     best_reward = reward
                 if self.target is not None and reward >= self.target:
                     print('Target %f achieved; saving %s' %
                           (self.target, model_fname))
-                    self._save(model_fname)
+                    self._save_model(model_fname)
                     break
 
             self.update(exp)
 
-        np.save(self.runs_path+(''
-                                if best_reward is None
-                                else ('%f' % best_reward)), history)
+        csvfilename = self.runs_path+(''
+                                      if best_reward is None
+                                      else ('%f' % best_reward))
+
+        self._save_history(csvfilename, history)
+
         reward, _ = test_net(self.net_act,
                              self.env,
                              self.eval_episodes,
                              device=self.device)
         model_fname = self.models_path + ('%+010.3f.dat' % reward)
-        self._save(model_fname)
+        self._save_model(model_fname)
 
-    def _save(self, model_fname):
+    def _save_model(self, model_fname):
 
         d = self._clean(self.net_act.state_dict())
         torch.save((d, self.env_name, self.nhid), open(model_fname, 'wb'))
+
+    def _save_history(self, pathname, history):
+        with open(pathname + '.csv', 'w') as csvfile:
+            csvfile.write('Iter,Time,Reward\n')
+            for row in history:  # last reward is always zero
+                csvfile.write('%d,%f,%f\n' % (row[0], row[1], row[2]))
 
     def _clean(self, net):
 
