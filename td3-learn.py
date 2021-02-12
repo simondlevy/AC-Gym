@@ -4,15 +4,25 @@ import torch
 import argparse
 import os
 from sys import stdout
+from time import time
 
 from ac_gym import gym_make
 from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
 
 def _save(args, avg_reward, evaluations, policy):
+
     stdout.flush()
+
     filename = 'td3-%s%+010.3f' % (args.env, avg_reward)
-    np.save('./runs/' + filename, evaluations)
+
+    # Save run to CSV file
+    with open('./runs/' + filename + '.csv', 'w') as csvfile:
+        csvfile.write('Iter,Time,Reward\n')
+        for row in evaluations[:-1]:  # last eval is always zero
+            csvfile.write('%d,%f,%f\n' % (row[0], row[1], row[2]))
+
+    # Save network
     torch.save((policy.get(), args.env, args.nhid),
                open('./models/'+filename+'.dat', 'wb'))
 
@@ -90,6 +100,8 @@ def main():
 
     print('Running %d episodes with random action ...' % args.start_episodes)
 
+    start = time()
+
     while report_index < args.maxeps:
 
         episode_evaluations += 1
@@ -143,7 +155,7 @@ def main():
             episode_evaluations = 0
             episode_index += 1
 
-        evaluations.append((episode_index+1, episode_reward))
+        evaluations.append((episode_index+1, time()-start, episode_reward))
 
         # Evaluate episode
         test_index = episode_index - args.start_episodes
