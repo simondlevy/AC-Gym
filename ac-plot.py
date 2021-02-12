@@ -16,6 +16,8 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('csvfile', metavar='CSVFILE', help='input .csv file')
+    parser.add_argument('--time', dest='time', action='store_true',
+                        help='Plot against time instead of episode')
     args = parser.parse_args()
 
     try:
@@ -29,15 +31,18 @@ def main():
               (data[1], data[2], data[3]))
         exit(0)
 
-    ep = data[:, 0]
-    # t = data[:, 1]
+    e = data[:, 0]
+    t = data[:, 1]
     r = data[:, 2]
 
-    plt.plot(ep, r)
+    if args.time:
+        plt.plot(t, r)
+        plt.xlabel('Time (sec)')
+    else:
+        plt.plot(e, r)
+        plt.xlabel('Episode')
 
-    plt.xlabel('Episode')
     plt.ylabel('Reward')
-
     plt.title(args.csvfile)
 
     plt.show()
