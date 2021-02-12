@@ -12,28 +12,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot(data, beg, s1, s2, lbl):
-
-    if len(data.shape) < 2:
-        print('Just one point: Mean = %+3.3f  Std = %+3.3f  Max = %+3.3f' %
-              (data[1], data[2], data[3]))
-        exit(0)
-
-    g = data[:, 0]
-
-    mn = data[:, beg]
-    sd = data[:, beg+1]
-    mx = data[:, beg+2]
-
-    plt.plot(g, mn, s1)
-    plt.plot(g, mx, s2)
-    plt.plot(g, mn + sd, 'g--')
-    plt.plot(g, mn - sd, 'g--')
-
-    plt.xlabel('Generation')
-    plt.legend(['Mean ' + lbl, 'Max ' + lbl, '+/-1 StdDev'])
-
-
 def main():
 
     parser = argparse.ArgumentParser()
@@ -46,9 +24,19 @@ def main():
         print('Unable to open file %s' % args.csvfile)
         exit(1)
 
-    exit(0)
+    if len(data.shape) < 2:
+        print('Just one point: Mean = %+3.3f  Std = %+3.3f  Max = %+3.3f' %
+              (data[1], data[2], data[3]))
+        exit(0)
 
-    plot(data, 1, 'r', 'm', 'Fitness')
+    ep = data[:, 0]
+    # t = data[:, 1]
+    r = data[:, 2]
+
+    plt.plot(ep, r)
+
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
 
     plt.title(args.csvfile)
 
