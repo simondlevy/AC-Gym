@@ -9,7 +9,7 @@ import torch.optim as optim
 
 
 def save_history(pathname, history):
-    with open(pathname, 'w') as csvfile:
+    with open(pathname + '.csv', 'w') as csvfile:
         csvfile.write('Iter,Time,Reward\n')
         for row in history[:-1]:  # last reward is always zero
             csvfile.write('%d,%f,%f\n' % (row[0], row[1], row[2]))
@@ -84,6 +84,8 @@ class Solver:
                         print('\n* Best reward updated: %+.3f -> %+.3f *\n' %
                               (best_reward, reward))
                         self._save(model_fname)
+                        csvfilename = self.runs_path+('%f' % best_reward)
+                        save_history(csvfilename, history)
                     best_reward = reward
                 if self.target is not None and reward >= self.target:
                     print('Target %f achieved; saving %s' %
