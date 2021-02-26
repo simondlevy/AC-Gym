@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
 import torch
-import argparse
 import os
 from sys import stdout
 from time import time
