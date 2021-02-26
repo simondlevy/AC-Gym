@@ -129,6 +129,8 @@ def make_learn_parser():
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
     parser.add_argument('--maxeps', default=None, type=int,
                         help='Maximum number of episodes')
+    parser.add_argument('--maxtime', default=None, type=int,
+                        help='Maximum time in seconds')
     parser.add_argument('--target', type=float, default=np.inf,
                         help='Quitting criterion for average reward')
     parser.add_argument('--gamma', default=0.99, help='Discount factor')
