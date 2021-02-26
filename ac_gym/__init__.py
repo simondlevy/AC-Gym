@@ -35,6 +35,7 @@ class Solver:
 
         self.checkpoint = args.checkpoint
         self.maxeps = args.maxeps
+        self.maxtime = args.maxtime
         self.test_iters = args.test_iters
         self.eval_episodes = args.eval_episodes
         self.target = args.target
@@ -52,9 +53,15 @@ class Solver:
 
         for episode_idx, exp in enumerate(self.exp_source):
 
+            elapsed = time() - start
+
             rewards_steps = self.exp_source.pop_rewards_steps()
 
             if episode_idx == maxeps:
+                break
+
+            if self.maxtime is not None and elapsed >= self.maxtime:
+                print('Timed out at %d seconds' % self.maxtime)
                 break
 
             if rewards_steps:
@@ -70,7 +77,7 @@ class Solver:
                       (episode_idx, reward, steps, total_evaluations))
                 total_evaluations += steps
                 model_fname = self.models_path + ('%+010.3f.dat' % reward)
-                history.append((episode_idx+1, time()-start, reward))
+                history.append((episode_idx+1, elapsed, reward))
                 if (self.checkpoint and (best_reward is None or
                                          best_reward < reward)):
                     if best_reward is not None:
