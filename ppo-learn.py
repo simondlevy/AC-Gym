@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ac_gym import Solver, ptan, model, calc_logprob, make_learn_parser
+from ac_gym import Solver, ptan, model, calc_logprob, make_learn_parser_extra
 from ac_gym import gym_make
 
 import torch
@@ -142,7 +142,7 @@ class PPO(Solver):
 
 def main():
 
-    parser = make_learn_parser()
+    parser = make_learn_parser_extra()
 
     parser.add_argument('--gae-lambda', default=0.95, type=float,
                         help='Lambda for Generalized Advantage Estimation')

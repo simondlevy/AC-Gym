@@ -2,7 +2,7 @@
 import math
 
 from ac_gym import Solver, model, common, calc_logprob
-from ac_gym import gym_make, make_learn_parser
+from ac_gym import gym_make, make_learn_parser_extra
 from ac_gym.ptan.experience import ExperienceSourceFirstLast
 
 import torch
@@ -69,7 +69,7 @@ class A2C(Solver):
 
 def main():
 
-    parser = make_learn_parser()
+    parser = make_learn_parser_extra()
 
     parser.add_argument('--reward-steps', default=5, type=int,
                         help='Reward steps')

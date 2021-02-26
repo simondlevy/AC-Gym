@@ -6,7 +6,7 @@ import os
 from sys import stdout
 from time import time
 
-from ac_gym import gym_make
+from ac_gym import gym_make, make_learn_parser
 from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
 
@@ -29,23 +29,8 @@ def _save(args, avg_reward, history, policy):
 
 def main():
 
-    fmtr = argparse.ArgumentDefaultsHelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=fmtr)
-    parser.add_argument('--env', default='Pendulum-v0',
-                        help='Gym environment name')
-    parser.add_argument('--checkpoint', dest='checkpoint', action='store_true',
-                        help='Save at each new best')
-    parser.add_argument('--nhid', default='64', type=int,
-                        help='Number of hidden units')
-    parser.add_argument('--maxeps', default=np.inf, type=int,
-                        help='Maximum number of episodes')
-    parser.add_argument('--target', type=float, default=np.inf,
-                        help='Quitting criterion for average reward')
-    parser.add_argument('--gamma', default=0.99, help='Discount factor')
-    parser.add_argument('--test-iters', default=10, type=float,
-                        help='How often (episodes) to test and save best')
-    parser.add_argument('--eval-episodes', default=10, type=float,
-                        help='How many episodes to evaluate for average')
+    parser = make_learn_parser()
+
     hlp = 'Epsiodes during which initial random policy is used'
     parser.add_argument('--start-episodes', default=125, type=int, help=hlp)
     parser.add_argument('--expl-noise', default=0.1,
@@ -60,6 +45,7 @@ def main():
                         help='Range to clip target policy noise')
     parser.add_argument('--policy-freq', default=2, type=int,
                         help='Frequency of delayed policy updates')
+
     args = parser.parse_args()
 
     os.makedirs('./runs', exist_ok=True)
@@ -102,7 +88,7 @@ def main():
 
     start = time()
 
-    while report_index < args.maxeps:
+    while report_index < np.inf if args.maxeps is None else args.maxeps:
 
         episode_evaluations += 1
 

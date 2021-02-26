@@ -118,8 +118,11 @@ class Solver:
 
 
 def make_learn_parser():
+
     fmtr = argparse.ArgumentDefaultsHelpFormatter
+
     parser = argparse.ArgumentParser(formatter_class=fmtr)
+
     parser.add_argument('--env', default='Pendulum-v0', help='Environment id')
     parser.add_argument('--checkpoint', dest='checkpoint', action='store_true',
                         help='Save at each new best')
@@ -134,10 +137,18 @@ def make_learn_parser():
     parser.add_argument('--eval-episodes', default=10, type=float,
                         help='How many episodes to evaluate for average')
 
+    return parser
+
+
+def make_learn_parser_extra():
+
+    parser = make_learn_parser()
+
     parser.add_argument('--cuda', default=False, action='store_true',
                         help='Enable CUDA')
     parser.add_argument('--datafile', required=False,
                         help='Name of data file to load')
+
     return parser
 
 

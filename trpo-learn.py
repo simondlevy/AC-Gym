@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from ac_gym import Solver, ptan, model, trpo, calc_logprob, make_learn_parser
-from ac_gym import gym_make
+from ac_gym import Solver, ptan, model, trpo, calc_logprob
+from ac_gym import gym_make, make_learn_parser_extra
 
 import torch
 import torch.nn.functional as F
@@ -125,7 +125,7 @@ class TRPO(Solver):
 
 def main():
 
-    parser = make_learn_parser()
+    parser = make_learn_parser_extra()
 
     parser.add_argument('--lr-critic', default=1e-3, type=float,
                         help='Critic learning rate')

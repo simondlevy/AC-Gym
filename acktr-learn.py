@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import math
 
-from ac_gym import Solver, model, common, kfac, calc_logprob, make_learn_parser
-from ac_gym import gym_make
+from ac_gym import Solver, model, common, kfac, calc_logprob
+from ac_gym import make_learn_parser_extra, gym_make
 from ac_gym.ptan.experience import ExperienceSourceFirstLast
 
 import torch
@@ -86,7 +86,7 @@ class ACKTR(Solver):
 
 def main():
 
-    parser = make_learn_parser()
+    parser = make_learn_parser_extra()
 
     parser.add_argument('--reward-steps', default=5, type=int,
                         help='Reward steps')

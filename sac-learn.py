@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from ac_gym import Solver, ptan, model, common, make_learn_parser, gym_make
+from ac_gym import Solver, ptan, model, common, gym_make
+from ac_gym import make_learn_parser_extra
 from ac_gym.ptan.experience import ExperienceSourceFirstLast
 from ac_gym.ptan.experience import ExperienceReplayBuffer
 
@@ -89,7 +90,7 @@ class SAC(Solver):
 
 def main():
 
-    parser = make_learn_parser()
+    parser = make_learn_parser_extra()
 
     parser.add_argument('--batch-size', default=64, type=int,
                         help='Batch size')
