@@ -91,6 +91,8 @@ def main():
 
         episode_evaluations += 1
 
+        elapsed = time() - start
+
         # Select action randomly or according to policy
         if episode_index < args.start_episodes:
             action = env.action_space.sample()
@@ -140,7 +142,7 @@ def main():
             episode_evaluations = 0
             episode_index += 1
 
-        history.append((episode_index+1, time()-start, episode_reward))
+        history.append((episode_index+1, elapsed, episode_reward))
 
         # Evaluate episode
         test_index = episode_index - args.start_episodes
@@ -169,6 +171,10 @@ def main():
             if avg_reward >= args.target:
                 print('Target average reward %f achieved' % args.target)
                 break
+
+        if args.maxtime is not None and elapsed >= args.maxtime:
+            print('Timed out at %d seconds' % args.maxtime)
+            break
 
     # Save final net
     avg_reward, _ = eval_policy(policy, env, args.eval_episodes)
