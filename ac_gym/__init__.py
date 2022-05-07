@@ -130,7 +130,7 @@ def make_learn_parser():
 
     parser = argparse.ArgumentParser(formatter_class=fmtr)
 
-    parser.add_argument('--env', default='Pendulum-v0', help='Environment id')
+    parser.add_argument('--env', default='Pendulum-v1', help='Environment id')
     parser.add_argument('--checkpoint', dest='checkpoint', action='store_true',
                         help='Save at each new best')
     parser.add_argument('--nhid', default=64, type=int, help='Hidden units')
