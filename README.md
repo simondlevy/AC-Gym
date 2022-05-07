@@ -16,18 +16,18 @@ command-line interface and minimal external dependencies ([PyTorch](https://pyto
 
 This will run the [TD3](https://towardsdatascience.com/td3-learning-to-run-with-ai-40dfc512f93)
 algorithm on the default environment
-([Pendulum-v0](https://gym.openai.com/envs/Pendulum-v0/)) until an average
+([Pendulum-v1](https://gym.openai.com/envs/Pendulum-v1/)) until an average
 reward of  -500 is reached (which takes about 23 seconds on my Asus Predator
 Helios laptop).  Once the program completes, you can display the results by
 running
 
-```python3 ac-test.py models/td3-Pendulum-v0-<REWARD>.dat```
+```python3 ac-test.py models/td3-Pendulum-v1-<REWARD>.dat```
 
 where ```<REWARD>``` is the reward value.
 
 If you have installed [matplotlib](https://matplotlib.org/), you can visualize the episode reward over time by running
 
-```python3 ac-plot.py models/td3-Pendulum-v0-<REWARD>.dat```
+```python3 ac-plot.py models/td3-Pendulum-v1-<REWARD>.dat```
 
 
 ## Next steps
