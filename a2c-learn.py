@@ -9,7 +9,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
-
 class A2C(Solver):
 
     def __init__(self, args):

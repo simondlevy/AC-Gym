@@ -8,7 +8,6 @@ from time import time
 from ac_gym import gym_make, make_learn_parser
 from ac_gym.td3 import TD3, ReplayBuffer, eval_policy
 
-
 def _save(args, avg_reward, history, policy):
 
     stdout.flush()

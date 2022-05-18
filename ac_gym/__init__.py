@@ -7,7 +7,6 @@ import os
 from time import time
 import torch.optim as optim
 
-
 class Solver:
 
     def __init__(self, args, algo_name):
@@ -183,14 +182,19 @@ def test_net(net, env, count=10, device='cpu'):
 
 def gym_make(envname):
 
+    try:
+        import pybullet_envs
+    except:
+        pass
+
     env = None
 
     try:
         env = gym.make(envname)
-
     except Exception as e:
-        print('Unable to make environment %s: %s' %
-              (envname, e))
+        print('Unable to make environment %s: %s' % (envname, e))
+        if 'BulletEnv' in envname:
+            print('May need to install pybullet')
         exit(1)
 
     return env
