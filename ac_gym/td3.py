@@ -181,7 +181,7 @@ class TD3:
         self.actor_target = copy.deepcopy(self.actor)
 
 
-def eval_policy(policy, env, eval_episodes=10, render=False, is_bullet=False):
+def eval_policy(policy, env, eval_episodes=10, render=False, is_bullet=False, dump=False):
     '''
     Runs policy for X episodes and returns average reward
     '''
@@ -200,6 +200,9 @@ def eval_policy(policy, env, eval_episodes=10, render=False, is_bullet=False):
         while not done:
 
             action = policy.select_action(np.array(state))
+
+            if dump:
+                print(action)
 
             state, reward, done, _ = env.step(action)
 

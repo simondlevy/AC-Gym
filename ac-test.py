@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 
-def run_td3(parts, env, nhid, nodisplay, is_bullet):
+def run_td3(parts, env, nhid, nodisplay, is_bullet, dump):
 
     policy = TD3(
             env.observation_space.shape[0],
@@ -21,10 +21,10 @@ def run_td3(parts, env, nhid, nodisplay, is_bullet):
 
     policy.set(parts)
 
-    return eval_policy(policy, env, render=(not nodisplay), eval_episodes=1, is_bullet=is_bullet)
+    return eval_policy(policy, env, render=(not nodisplay), eval_episodes=1, is_bullet=is_bullet, dump=dump)
 
 
-def run_other(parts, env, nhid, nodisplay, is_bullet):
+def run_other(parts, env, nhid, nodisplay, is_bullet, dump):
 
     net = model.ModelActor(env.observation_space.shape[0],
                            env.action_space.shape[0],
@@ -51,6 +51,9 @@ def run_other(parts, env, nhid, nodisplay, is_bullet):
         if np.isscalar(action):
             action = [action]
 
+        if dump:
+            print(action)
+
         obs, reward, done, _ = env.step(action)
 
         if not nodisplay:
@@ -73,6 +76,8 @@ def main():
     parser.add_argument('filename', metavar='FILENAME', help='.dat input file')
     parser.add_argument('--record', default=None,
                         help='If specified, sets the recording dir')
+    parser.add_argument('--dump', dest='dump', action='store_true',
+                        help='Print actions to stdout')
     parser.add_argument('--nodisplay', dest='nodisplay', action='store_true',
                         help='Suppress display')
     parser.add_argument('--seed', default=None, type=int,
@@ -94,7 +99,7 @@ def main():
 
     fun = run_td3 if 'td3' in args.filename else run_other
 
-    reward, steps = fun(parts, env, nhid, args.nodisplay, is_env_bullet(env_name))
+    reward, steps = fun(parts, env, nhid, args.nodisplay, is_env_bullet(env_name), args.dump)
 
     print('In %d steps we got %.3f reward.' % (steps, reward))
 
