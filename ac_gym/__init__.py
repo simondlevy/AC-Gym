@@ -193,7 +193,7 @@ def gym_make(envname):
         env = gym.make(envname)
     except Exception as e:
         print('Unable to make environment %s: %s' % (envname, e))
-        if 'BulletEnv' in envname:
+        if is_env_bullet(envname):
             print('May need to install pybullet')
         exit(1)
 
@@ -204,3 +204,6 @@ def calc_logprob(mu_v, logstd_v, actions_v):
     p1 = - ((mu_v - actions_v) ** 2) / (2*torch.exp(logstd_v).clamp(min=1e-3))
     p2 = - torch.log(torch.sqrt(2 * np.pi * torch.exp(logstd_v)))
     return p1 + p2
+
+def is_env_bullet(envname):
+    return 'BulletEnv' in envname

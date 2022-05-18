@@ -181,7 +181,7 @@ class TD3:
         self.actor_target = copy.deepcopy(self.actor)
 
 
-def eval_policy(policy, env, eval_episodes=10, render=False):
+def eval_policy(policy, env, eval_episodes=10, render=False, is_bullet=False):
     '''
     Runs policy for X episodes and returns average reward
     '''
@@ -189,14 +189,24 @@ def eval_policy(policy, env, eval_episodes=10, render=False):
     total_reward = 0.
     total_steps = 0
 
+    # Start rendering thread for PyBullet if needed
+    if is_bullet:
+        env.render()
+
     for _ in range(eval_episodes):
+
         state, done = env.reset(), False
+
         while not done:
+
             action = policy.select_action(np.array(state))
+
             state, reward, done, _ = env.step(action)
-            if render:
+
+            if render and not is_bullet:
                 env.render()
                 time.sleep(.02)
+
             total_reward += reward
             total_steps += 1
 
