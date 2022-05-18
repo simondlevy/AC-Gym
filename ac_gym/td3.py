@@ -203,8 +203,9 @@ def eval_policy(policy, env, eval_episodes=10, render=False, is_bullet=False):
 
             state, reward, done, _ = env.step(action)
 
-            if render and not is_bullet:
-                env.render()
+            if render:
+                if not is_bullet:
+                    env.render()
                 time.sleep(.02)
 
             total_reward += reward

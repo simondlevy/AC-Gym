@@ -53,8 +53,9 @@ def run_other(parts, env, nhid, nodisplay, is_bullet):
 
         obs, reward, done, _ = env.step(action)
 
-        if not is_bullet and not nodisplay:
-            env.render('rgb_array')
+        if not nodisplay:
+            if not is_bullet:
+                env.render('rgb_array')
             time.sleep(.02)
 
         total_reward += reward
